@@ -2,7 +2,7 @@ from re import M
 from typing import *
 from numpy import nan, rint
 from pandas.core.indexing import convert_missing_indexer
-from MyTT.MyTT import *
+from MyTT1.MyTT import *
 import matplotlib.pyplot as plt
 import pandas as pd
 from stock import *
