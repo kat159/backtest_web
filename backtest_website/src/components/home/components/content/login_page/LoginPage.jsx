@@ -31,11 +31,13 @@ export default class LoginPage extends Component {
             params: this.userData,
         }).then(
             res => {
-                console.log(res);
-                if (res.data[0] === undefined) { 
+                console.log('results：', res.data.results);
+                const result = res.data.results[0];
+                
+                if (result === undefined) { 
                     // username not exist
                     this.setState({invalidUsername: true, invalidPassword: false, UsernameExist: false, successSignUp: false})
-                } else if (res.data[0].password !== this.userData.password) { 
+                } else if (result.password !== this.userData.password) { 
                     // incorrect password
                     this.setState({invalidUsername: false, invalidPassword: true, UsernameExist: false, successSignUp: false});
                 } else { 
@@ -54,13 +56,13 @@ export default class LoginPage extends Component {
         axios({
             method: 'post',
             url: '/users',
-            params: this.userData,
+            data: this.userData, 
             // 如果params换成data(body)， 简单的设置allow origin无法跨域，可能是含body post就会发送两次请求(optional)？
             // 好像fetch的post带body不会发送optional？
         }).then(
             res => {
                 console.log(res);
-                if (res.data.err === "user exist") { 
+                if (res.data.err_code === 1) { 
                     // user exist
                     this.setState({UsernameExist: true, successSignUp: false, invalidPassword: false, invalidUsername:false, })
                 } else {

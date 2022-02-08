@@ -73,31 +73,21 @@ export default class Test extends Component {
     }
     
     submit = () => {
-        console.log('===============submit======================')
-        console.log(JSON.stringify(this.state))
-        // let Vname = 'name'
-        // ***对象属性名引用变量的字符串***
-        // this.setState({[Vname]: 'JJJ'}) // {name: 'JJJ'}  
-        // console.log(this.state)
-        axios.defaults.baseURL = 'http://127.0.0.1:3333';
+        axios.defaults.baseURL = 'http://127.0.0.1:3000';
         axios({
             method: 'post',
-            url: '/run_test',
+            url: '/backtest',
             data: JSON.stringify(this.state),
             headers: {
                 'Content-Type': 'application/json',
             },
         }).then(
             res => {
-                console.log('RECEIVE:==============================')
-                console.log(res)
                 PubSub.publish('report_metrics', res.data);
                 PubSub.publish('test_log', [Date(), this.state.name, ])
             },
             err => {console.log(err)}
         )
-        // 如果是函数组件， history = useHistory(); history.push() 
-        // this.props.history.push('/test-report')
     }
 
     render() {
@@ -110,13 +100,7 @@ export default class Test extends Component {
                     <PositionOpen criterion={openCriterion} ref={c => this.positionOpen = c} />
                     <PositionClose criterion={closeCriterion} ref={c => this.positionClose = c} />
                     <BacktestParam testParams={testParams} ref={c => this.backtestParam = c} />
-                    {/* <input onClick={this.submit} className='btn btn-info' type='button' value="MySubmit" /> */}
-                    {/* <br /> */}
-                    {/* <br /> */}
-                    {/* <input type='submit' value="Submit" /> */}
                 </form>
-                {/* <button onClick={this.submit}>run</button> */}
-                {/* <br /> */}
                 <Link onClick={this.submit} className='btn btn-info' style={{marginLeft: '20px'}} to='/test-report'>Run Test</Link>
                 
             </div>
