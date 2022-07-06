@@ -1,0 +1,25 @@
+th,
+        td {
+            border-bottom: 1px solid darkgray;
+        }
+
+        table {
+            width: 80%;
+            margin: auto;
+            color: #282c34;
+            font-family: Arial, serif;
+        }
+
+th {
+            background-color: rgb(83, 188, 214);
+            ;
+            color: white;
+            height: 50px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        td {
+            font-size: 18px;
+            text-align: center;
+        }

@@ -16,6 +16,17 @@ class UserService {
             // get all users
             const { results } = await usersModel.findAll();
             res.json({ results: results, err_code: 0 });
+
+            //**不会阻塞，如果是同步代码才会阻塞
+            /*
+            setTimeout(
+                async () => {
+                    const { results } = await usersModel.findAll();
+                    res.json({ results: results, err_code: 0 });
+                },
+                10000
+            )
+            */
         }
     }
 

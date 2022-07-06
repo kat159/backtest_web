@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
-import Criteria from './Criteria'
+import Criteria from './components/Criteria/Criteria'
 import {nanoid} from 'nanoid'
 import PubSub from 'pubsub-js'
+import CriteriaBuilder from './components/CriteriaBuilder/CriteriaBuilder'
 
 export default class PositionOpen extends Component {
     conditions = []
@@ -32,6 +33,7 @@ export default class PositionOpen extends Component {
         
         return (
             <div>
+                <CriteriaBuilder />
                 <fieldset >
                     <legend className='legend'>Position Opening</legend>
                     {

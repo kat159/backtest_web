@@ -3,7 +3,7 @@ from stock import *
 from test import run_test, test_one_stock
 import publisher
 
-STOCK_DATA_PATH = os.path.abspath('./backtest/stock_data')
+STOCK_DATA_PATH = os.path.abspath('./stock_data')
 STOCKS = get_all_stocks(STOCK_DATA_PATH)
 
 # **TODO

@@ -1,6 +1,6 @@
 from typing import *
 from stock import Stock
-from MyTT.MyTT import *
+from MyTT1.MyTT import *
 import pandas
 import numpy
 from numpy import nan
