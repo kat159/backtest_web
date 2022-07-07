@@ -6,7 +6,7 @@ import BuilderSelection from './components/BuilderSelection/BuilderSelection';
 import ItemList from './components/ItemList/ItemList';
 import PubSub from 'pubsub-js';
 
-export default function CriteriaBuilder() {
+export default function CriteriaBuilder(props) {
 
     const col1Data = [
         ['Function', ''],
@@ -26,7 +26,7 @@ export default function CriteriaBuilder() {
             ['Divide', '']
         ],
         'Reference': [
-            
+            ['REF', 'REF( A, B ) : return value of A at B days ago']
         ],
         'Logic': [
             ['Cross Above', ''],
@@ -79,7 +79,7 @@ export default function CriteriaBuilder() {
         'Minus':                ['',            ['Number', 'Number'],                   ' - ',      'Number',       []          ],
         'Multiply':             ['',            ['Number', 'Number'],                   ' * ',      'Number',       []          ],
         'Divide':               ['',            ['Number', 'Number'],                   ' / ',      'Number',       []          ],
-        'Cross Above':          ['Cross',       ['Number', 'Number'],                   ', ',       'Bool',         []          ],
+        'Cross Above':          ['CrossOver',   ['Number', 'Number'],                   ', ',       'Bool',         []          ],
         'Cross Below':          ['CrossBelow',  ['Number', 'Number'],                   ', ',       'Bool',         []          ],
         'Lower Than':           ['',            ['Number', 'Number'],                   ' < ',      'Bool',         []          ],
         'Higher Than':          ['',            ['Number', 'Number'],                   ' > ',      'Bool',         []          ],
@@ -89,45 +89,58 @@ export default function CriteriaBuilder() {
         'Lowest':               ['LOW',         [],                                         '',     'Number',       []          ],
         'Close':                ['CLOSE',       [],                                         '',     'Number',       []          ],
         'Open':                 ['OPEN',        [],                                         '',     'Number',       []          ],
-        'MA':                   ['MA',          ['Number', 'ExactNumber'],                  ', ',   'Number',       []          ],
-        'MACD':                 ['MACD',        ['ExactNumber', 'ExactNumber', 'ExactNumber'],  ', ',   'Number',   [12, 26, 9] ],
+        'MA':                   ['MA',          ['Number'],                                 ', ',   'Number',       []          ],
+        'MACD':                 ['MACD',        [],                                         ', ',   'Number',   [12, 26, 9] ],
+        'REF':                  ['REF',         ['Any', 'Number'],                              ', ',   0,          []          ],
+
     }
 
     const [itemsSelected, setItemsSelected] = useState([]);
-    const [itemClicked, setItemClicked] = useState('');
 
-    const [buildingCriterion, setBuildingCriterion] = useState([['Cross Above', ['Add', [], []], ['Cross Below', [], []]]]);
+    const [buildingCriterion, setBuildingCriterion] = useState([[]]);
     const [routeToCurrentSelector, setRouteToCurrentSelector] = useState('');
+    const [isWarningForError, setIsWarningForError] = useState(false)
 
-    const onItemClicked = () => {
+    const onItemClicked = (itemClicked) => {
         if(routeToCurrentSelector !== '') { // 表示目前有选中
-            console.log(itemClicked);
-            updateRoute();
+            updateBuildingCriterion(itemClicked);
         }
     }
 
-    ????没做完
-    const updateRoute = () => {
-        const newRoute = [];
-        const deepCopy = (route, newRoute) => {
-            if (route === []) {
+    const updateBuildingCriterion = (itemClicked) => {
+        const deepCopy = (curCriterion, curRoute) => {
+            const res = [];
+            if (curRoute === routeToCurrentSelector) {
+                const itemRule = functionRules[itemClicked];
+                res.push(itemClicked);
+                for (let i = 0; i < itemRule[1].length; i++) {
+                    res.push([]);
+                }
+                return res;
+            }
+            if (curCriterion.length === 0) {
                 return [];
             }
-            for (const nextRoute of route) {
-                newRoute.push(updateRoute(nextRoute));
+            res.push(curCriterion[0]);
+            let counter = 1;
+            
+            for (const nextCriterion of curCriterion.slice(1)) {
+                res.push(deepCopy(nextCriterion, curRoute + (counter++)));
             }
+            return res
         }
-        
-
+        const newCriterion = [deepCopy(buildingCriterion[0], '0')];
+        setBuildingCriterion(newCriterion);
     }
 
     useEffect(() => {
         const token1 = PubSub.subscribe('criteria-selector-clicked', (msg, data) => {
             const {cur_route} = data;
+            setIsWarningForError(false);
             if(routeToCurrentSelector !== cur_route) {
                 setRouteToCurrentSelector(cur_route);
             } else {
-                setRouteToCurrentSelector('');
+                setRouteToCurrentSelector('');  // 清空选中
             }
         })
         return () => {
@@ -135,14 +148,97 @@ export default function CriteriaBuilder() {
         }
     })
 
-    const createCriterionBuilder = (s, route) => {
-        if (s.length === 0) {
+    const checkCriterion = () => {
+        
+        const helper = (curCriterion, curRoute) => {
+            if (curCriterion.length === 0) {
+                return {
+                    status: 'Error',
+                    error: 'Incomplete',
+                    errorDetail: 'Existing incomplete space',
+                    location: curRoute,
+                }
+            }
+
+            let res = '';
+
+            const criterionName = curCriterion[0];
+            const rule = functionRules[criterionName]
+            let [leadingText, paramTypes, joinChar, returnValueType] = rule
+            if (paramTypes.length === 0) { // 到底了, 以后加入新元素比如ExactNumber，可能需要修改
+                return {
+                    status: 'Valid',
+                    location: curRoute,
+                    criteriaStr: leadingText,
+                    returnValueType: returnValueType,
+                }
+            }
+
+            const parenthesized = paramTypes.length > 0;
+            let resReturnType = '';
+
+            res += leadingText + (parenthesized ? '(' : '');
+
+            for (let i = 1; i < curCriterion.length; i++) {
+                if (i > 1) {
+                    res += joinChar;
+                }
+                const childRes = helper(curCriterion[i], curRoute + i);
+                if (childRes.status === 'Error') {
+                    return childRes;
+                } else if (childRes.status === 'Valid') {
+                    const requiredParamType = paramTypes[i - 1];
+                    if (requiredParamType !== 'Any') {
+                        if (requiredParamType !== childRes.returnValueType) {
+                            return {
+                                status: 'Error',
+                                error: 'Invalid Value Type',
+                                errorDetail: 'Expect: ' + requiredParamType + ', ' + 'Get: ' + childRes.returnValueType,
+                                location: childRes.location,
+                            }
+                        }
+                    }
+                    if (returnValueType !== 'Number' && returnValueType !== 'Bool' && i === returnValueType) {
+                        resReturnType = childRes.returnValueType;
+                    }
+                    res += childRes.criteriaStr;
+                } else {
+                    console.error('ERROR: Unexpected Status when check criterion at D:\\Coding_Study\\backtest_final\\backtest_web\\backtest_website\\src\\components\\home\\components\\content\\test\\components\\PositionOpen\\components\\CriteriaBuilder')
+                }
+            }
+            res += parenthesized ? ')' : '';
+            return {
+                status: 'Valid',
+                location: curRoute,
+                criteriaStr: res,
+                returnValueType: resReturnType || returnValueType
+            }
+        }
+        let res = helper(buildingCriterion[0], '0')
+        if (res.returnValueType !== 'Bool') {
+            res = {
+                status: 'Error',
+                error: 'Invalid Value Type',
+                errorDetail: 'Returned value type of a criterion function should be Boolean',
+                location: res.location,
+            }
+        }
+        return res
+    }
+
+    /*
+        **TODO
+        Use e.stopPropagation() to prevent children triggering parent
+        no need to seperate
+    */
+    const createCriterionBuilder = (curCriterion, route) => {
+        if (curCriterion.length === 0) {
             return <div key={nanoid()} style={
                         {
                             width: 'fit-content',
                             float: 'left',
                             display: 'inline-block',
-                            borderColor: routeToCurrentSelector === route ? '#6f68ed' : 'gray',
+                            borderColor: routeToCurrentSelector === route && isWarningForError ? 'red' : routeToCurrentSelector === route ? '#6f68ed' : 'gray',
                             borderWidth: routeToCurrentSelector === route ? '3px' : '0px',
                             borderStyle: 'solid',
                         }
@@ -150,12 +246,17 @@ export default function CriteriaBuilder() {
                 <BuilderSelection cur_route={route} has_text="false" key={nanoid()} />
                 </div>
         }
+        const criterionName = curCriterion[0];
+        const rule = functionRules[criterionName]
+        const [leadingText, paramTypes, joinChar] = rule
+        const parenthesized = paramTypes.length > 0;
+
         const children = []
-        for (let i = 1; i < s.length; i++) {
+        for (let i = 1; i < curCriterion.length; i++) {
             if(i > 1) {
-                children.push(<BuilderSelection cur_route={route} key={nanoid()} has_text="true">{','}&nbsp;</BuilderSelection>)
+                children.push(<BuilderSelection cur_route={route} key={nanoid()} has_text="true">&nbsp;{joinChar}&nbsp;</BuilderSelection>)
             }
-            children.push(createCriterionBuilder(s[i], route+i));
+            children.push(createCriterionBuilder(curCriterion[i], route+i));
         }
 
         return (
@@ -164,18 +265,32 @@ export default function CriteriaBuilder() {
                     width: 'fit-content',
                     float: 'left',
                     display: 'inline-block',
-                    borderColor: routeToCurrentSelector === route ? '#6f68ed' : 'gray',
+                    borderColor: routeToCurrentSelector === route && isWarningForError ? 'red' : routeToCurrentSelector === route ? '#6f68ed' : 'gray',
                     borderWidth: routeToCurrentSelector === route ? '3px' : '0px',
                     borderStyle: 'solid',
                 }
             }>
-                <BuilderSelection cur_route={route} key={nanoid()} has_text="true" >{s[0]}{'('}&nbsp;</BuilderSelection>
+                <BuilderSelection cur_route={route} key={nanoid()} has_text="true" >{leadingText}{parenthesized && '('}&nbsp;</BuilderSelection>
                 {
                     children
                 }
-                <BuilderSelection cur_route={route} key={nanoid()} has_text="true" >&nbsp;{')'}</BuilderSelection>
+                <BuilderSelection cur_route={route} key={nanoid()} has_text="true" >&nbsp;{parenthesized && ')'}</BuilderSelection>
             </div>
         )
+    }
+
+    const onFinishClick = () => {
+        const res = checkCriterion();
+        if(res.status === 'Error') {
+            setRouteToCurrentSelector(res.location);
+            setIsWarningForError(true)
+            return ;
+        }
+
+        const {setIsBuildingCriteria, onFinishMsg} = props
+        setIsBuildingCriteria(false);
+        
+        PubSub.publish(onFinishMsg, {criteria: buildingCriterion, criteriaStr: res.criteriaStr})
     }
 
     return (
@@ -214,12 +329,13 @@ export default function CriteriaBuilder() {
                 }>  
                     <tbody>
                         <tr>
-                            <ItemList onItemClicked={onItemClicked} setItemClicked={setItemClicked} functionRules={functionRules} colNum={0} itemsSelected={itemsSelected} setItemsSelected={setItemsSelected} itemList={col1Data} />
-                            {itemsSelected[0] && col2Data[itemsSelected[0]] && <ItemList onItemClicked={onItemClicked} setItemClicked={setItemClicked} functionRules={functionRules} colNum={1} itemsSelected={itemsSelected} setItemsSelected={setItemsSelected} itemList={col2Data[itemsSelected[0]]} />}
-                            {itemsSelected[1] && col3Data[itemsSelected[1]] && <ItemList onItemClicked={onItemClicked} setItemClicked={setItemClicked} functionRules={functionRules} colNum={2} itemsSelected={itemsSelected} setItemsSelected={setItemsSelected} itemList={col3Data[itemsSelected[1]]} /> }
+                            <ItemList onItemClicked={onItemClicked} functionRules={functionRules} colNum={0} itemsSelected={itemsSelected} setItemsSelected={setItemsSelected} itemList={col1Data} />
+                            {itemsSelected[0] && col2Data[itemsSelected[0]] && <ItemList onItemClicked={onItemClicked} functionRules={functionRules} colNum={1} itemsSelected={itemsSelected} setItemsSelected={setItemsSelected} itemList={col2Data[itemsSelected[0]]} />}
+                            {itemsSelected[1] && col3Data[itemsSelected[1]] && <ItemList onItemClicked={onItemClicked} functionRules={functionRules} colNum={2} itemsSelected={itemsSelected} setItemsSelected={setItemsSelected} itemList={col3Data[itemsSelected[1]]} /> }
                         </tr>
                     </tbody>
                 </table>
+
                 <div>Current Criteria:</div>
                 <div style={{
                     width: 'fit-content',
@@ -228,7 +344,8 @@ export default function CriteriaBuilder() {
                 }}>
                     {createCriterionBuilder(buildingCriterion[0], '0')}
                 </div>
-                
+                <br />
+                <button onClick={onFinishClick} type='button' >Finish</button>
                 {/* <BuilderSelection routeToCriterion='0' buildingCriterion={buildingCriterion} setBuildingCriterion={setBuildingCriterion} functionRules={functionRules} /> */}
             </div>
         </Draggable>

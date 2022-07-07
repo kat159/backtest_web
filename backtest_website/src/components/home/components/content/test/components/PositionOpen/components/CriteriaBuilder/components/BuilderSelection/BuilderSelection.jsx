@@ -15,7 +15,7 @@ export default function BuilderSelection(props) {
     })
 
     const onClick = () => {
-        PubSub.publish('criteria-selector-clicked', {cur_route: cur_route});
+        PubSub.publish('criteria-selector-clicked', {cur_route: cur_route, status: 'Normal'});
     }
 
     return (

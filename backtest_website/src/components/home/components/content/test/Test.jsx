@@ -15,11 +15,13 @@ export default class Test extends Component {
         name: '',
         positionType: 'Long',
         openCriterion: [
-            ['CLOSE', '>', '1'],
+            [[]],
         ], 
         closeCriterion: [
-            ['CLOSE', '>', '1'],
+            [[]],
         ],
+        openCriterionStr: '',
+        closeCriterionStr: '',
         holdingDays: 1,
         testParams: {
             capital: 100000,
@@ -32,33 +34,19 @@ export default class Test extends Component {
 
     componentDidMount() {
         this.token1 = PubSub.subscribe('update_open_criterion', (msg, data) => {
-            const {index, criteria} = data;
-            console.log(criteria)
-            const newCriterion = this.state.openCriterion;
-            newCriterion[index] = criteria;
-            this.setState({openCriterion: newCriterion});
+            const {criteria, criteriaStr} = data;
+            this.setState({openCriterion: criteria, openCriterionStr: criteriaStr});
+
         })
-        this.token2 = PubSub.subscribe('add_open_criteria', (msg, criteria) => {
-            const newCriterion = this.state.openCriterion;
-            newCriterion.push(criteria);
-            this.setState({openCriterion: newCriterion});
+        this.token2 = PubSub.subscribe('update_close_criterion', (msg, data) => {
+            const {criteria, criteriaStr} = data;
+            this.setState({closeCriterion: criteria, closeCriterionStr: criteriaStr});
+
         })
-        this.token3 = PubSub.subscribe('update_close_criterion', (msg, data) => {
-            const {index, criteria} = data;
-            console.log(criteria)
-            const newCriterion = this.state.closeCriterion;
-            newCriterion[index] = criteria;
-            this.setState({closeCriterion: newCriterion});
-        })
-        this.token4 = PubSub.subscribe('add_close_criteria', (msg, criteria) => {
-            const newCriterion = this.state.closeCriterion;
-            newCriterion.push(criteria);
-            this.setState({closeCriterion: newCriterion});
-        })
-        this.token5 = PubSub.subscribe('update_holding_days', (msg, holdingDays) => {
+        this.token3 = PubSub.subscribe('update_holding_days', (msg, holdingDays) => {
             this.setState({holdingDays: holdingDays});
         })
-        this.token6 = PubSub.subscribe('update_test_params', (msg, testParams) => {
+        this.token4 = PubSub.subscribe('update_test_params', (msg, testParams) => {
             this.setState({testParams: testParams});
         })
     }
@@ -68,11 +56,11 @@ export default class Test extends Component {
         PubSub.unsubscribe(this.token2);
         PubSub.unsubscribe(this.token3);
         PubSub.unsubscribe(this.token4);
-        PubSub.unsubscribe(this.token5);
-        PubSub.unsubscribe(this.token6);
     }
     
     submit = () => {
+        console.log(this.state);
+        /*
         axios.defaults.baseURL = 'http://127.0.0.1:3000';
         axios({
             method: 'post',
@@ -88,21 +76,20 @@ export default class Test extends Component {
             },
             err => {console.log(err)}
         )
+        */
     }
 
     render() {
-        const {openCriterion, closeCriterion, testParams} = this.state
+        const {openCriterion, closeCriterion, testParams, openCriterionStr, closeCriterionStr} = this.state
         return (
-            <div>
-                
+            <div>    
                 <form action="http://localhost:3333/run_test" method="GET">
                     <Header ref={c => this.header = c} />
-                    <PositionOpen criterion={openCriterion} ref={c => this.positionOpen = c} />
-                    <PositionClose criterion={closeCriterion} ref={c => this.positionClose = c} />
-                    <BacktestParam testParams={testParams} ref={c => this.backtestParam = c} />
+                    <PositionOpen criterion={openCriterion} criteriaStr={openCriterionStr} />
+                    <PositionClose criterion={closeCriterion} criteriaStr={closeCriterionStr} />
+                    <BacktestParam testParams={testParams} />
                 </form>
                 <Link onClick={this.submit} className='btn btn-info' style={{marginLeft: '20px'}} to='/test-report'>Run Test</Link>
-                
             </div>
         )
     }

@@ -4,16 +4,13 @@ import Item from './components/Item/Item';
 
 export default function ItemList(props) {
 
-    const {itemList, } = props;
-
+    const {itemList, colNum, itemsSelected, functionRules} = props;
+    
     return (
             <td style={
                 {
-                    padding: '5px',
-                    paddingRight: '10px',
-                    paddingBottom: '2px',
                     verticalAlign: 'top',
-                    minWidth: '50px'
+                    backgroundColor: '#c4cbff', // #e6e9ff
                 }
             }>
                 {
