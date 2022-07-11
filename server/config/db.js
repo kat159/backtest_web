@@ -1,34 +1,26 @@
 const mysql = require('mysql');
 const dbConfig = require('./db.config');
 
+const connection = mysql.createConnection(dbConfig);
+connection.connect(err => {
+    if (err) {
+        console.log('connection to database failed');
+    }
+    console.log('succesfully connect to database');
+})
+
 module.exports = {
     query(sql, params) {
         return new Promise((resolve, reject) => {
-            const connection = mysql.createConnection(dbConfig);
-            connection.connect(err => {
-                if (err) {
-                    console.log('connection to database failed');
-                    reject(err);
-                }
-                console.log('succesfully connect to database');
-            })
-            
             connection.query(sql, params, (err, results, fields) => {
                 if (err) {
-                    console.log('database operation failed');
+                    console.log('Database Operation Failed: ', sql);
                     reject(err);
                 }
                 resolve({
                     results, 
                     fields
                 })
-            })
-            connection.end(err => {
-                if (err) {
-                    console.log('failed to close database');
-                    reject(err);
-                }
-                console.log('succesfully close database');
             })
         })
     },
@@ -39,17 +31,9 @@ module.exports = {
                 user: 'root',
                 password: 'root',
             });
-            connection.connect(err => {
-                if (err) {
-                    console.log('connection to database failed');
-                    reject(err);
-                }
-                console.log('succesfully connect to database');
-            })
-
             var sqls = [
-                "CREATE DATABASE if not exists mydb;",
-                "use mydb;",
+                "CREATE DATABASE if not exists " + dbConfig.database + " ; ",
+                "use " + dbConfig.database + " ; ",
                 "CREATE TABLE if not exists users (\
                     user_id INT AUTO_INCREMENT, \
                     username VARCHAR(255), \
@@ -103,7 +87,7 @@ module.exports = {
             for (const sql of sqls) {
                 connection.query(sql, (err, results, fields) => {
                     if (err) {
-                        console.log('database operation failed');
+                        console.log("Initializing Operation Failed:", sql)
                         reject(err);
                     }
                     resolve({
@@ -112,14 +96,6 @@ module.exports = {
                     })
                 })
             }
-            connection.end(err => {
-                if (err) {
-                    console.log('failed to close database');
-                    reject(err);
-                }
-                console.log('succesfully initialize database');
-                console.log('succesfully close database');
-            })
         })
     }
 }

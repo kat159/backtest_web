@@ -5,6 +5,8 @@ import Draggable from 'react-draggable'
 import BuilderSelection from './components/BuilderSelection/BuilderSelection';
 import ItemList from './components/ItemList/ItemList';
 import PubSub from 'pubsub-js';
+import axios from 'axios'
+
 
 export default function CriteriaBuilder(props) {
 
@@ -96,10 +98,11 @@ export default function CriteriaBuilder(props) {
     }
 
     const [itemsSelected, setItemsSelected] = useState([]);
-
-    const [buildingCriterion, setBuildingCriterion] = useState([[]]);
+    const [buildingCriterion, setBuildingCriterion] = useState([['Higher Than', ['Highest'], ['Lowest']]]);
     const [routeToCurrentSelector, setRouteToCurrentSelector] = useState('');
     const [isWarningForError, setIsWarningForError] = useState(false)
+    const {userId, isEditing, isCreating} = props
+
 
     const onItemClicked = (itemClicked) => {
         if(routeToCurrentSelector !== '') { // 表示目前有选中
@@ -134,6 +137,15 @@ export default function CriteriaBuilder(props) {
     }
 
     useEffect(() => {
+        console.log('CriteriaBuilder has attribute criterionArr =', props.criterionArr)
+        if (props.criterionArr !== undefined) {
+            setBuildingCriterion(props.criterionArr)
+        }
+    }, [])
+
+    useEffect(() => {
+        console.log('Criteria Builder: userId=', userId);
+
         const token1 = PubSub.subscribe('criteria-selector-clicked', (msg, data) => {
             const {cur_route} = data;
             setIsWarningForError(false);
@@ -225,9 +237,9 @@ export default function CriteriaBuilder(props) {
         }
         return res
     }
-
+    // **TODO
     /*
-        **TODO
+       
         Use e.stopPropagation() to prevent children triggering parent
         no need to seperate
     */
@@ -279,6 +291,7 @@ export default function CriteriaBuilder(props) {
         )
     }
 
+    const {onFinishMsg} = props
     const onFinishClick = () => {
         const res = checkCriterion();
         if(res.status === 'Error') {
@@ -286,11 +299,57 @@ export default function CriteriaBuilder(props) {
             setIsWarningForError(true)
             return ;
         }
+        console.log('2222', res)
 
-        const {setIsBuildingCriteria, onFinishMsg} = props
-        setIsBuildingCriteria(false);
-        
         PubSub.publish(onFinishMsg, {criteria: buildingCriterion, criteriaStr: res.criteriaStr})
+    }
+
+    const {onSaveMsg, } = props
+    const onSaveClick = () => {
+        // TODO: asking for criterion name
+        if (userId === '-1') {
+            alert('Please sign in to save the criterion');
+            return
+        }
+
+        const criterionName = nanoid();
+
+        let res = checkCriterion();
+        if(res.status === 'Error') {
+            setRouteToCurrentSelector(res.location);
+            setIsWarningForError(true)
+            return ;
+        }
+
+        const criterionStr = res.criteriaStr;
+        
+        res = {
+            user_id: userId,
+            name: criterionName,
+            criterion_str: criterionStr,
+            criterion_arr: JSON.stringify(buildingCriterion),
+        }
+
+        axios.defaults.baseURL = 'http://127.0.0.1:3000';
+        axios({
+            method: 'post',
+            url: '/criteria',
+            data: JSON.stringify(res),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(
+            res => {
+                console.log(res)
+            },
+            err => {console.log(err)}
+        )
+        PubSub.publish(onSaveMsg, res);
+    }   
+
+    const onForceClose = () => {
+        PubSub.publish(onFinishMsg, {forceClosing: true});
+        PubSub.publish(onSaveMsg, {forceClosing: true});
     }
 
     return (
@@ -345,7 +404,9 @@ export default function CriteriaBuilder(props) {
                     {createCriterionBuilder(buildingCriterion[0], '0')}
                 </div>
                 <br />
-                <button onClick={onFinishClick} type='button' >Finish</button>
+                {!isCreating && <button onClick={onFinishClick} type='button' >Finish</button>}
+                {!isEditing && <button onClick={onSaveClick} type='button' >Save Criterion</button>}
+                {<button onClick={onForceClose} type='button' >Close</button>}
                 {/* <BuilderSelection routeToCriterion='0' buildingCriterion={buildingCriterion} setBuildingCriterion={setBuildingCriterion} functionRules={functionRules} /> */}
             </div>
         </Draggable>

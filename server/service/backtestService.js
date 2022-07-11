@@ -1,11 +1,11 @@
 const strategyModel = require('../model/strategyModel');
 const mq = require('../config/mq');
 const { nanoid } = require('nanoid');
-const exec = require('../config/exec');
 
 module.exports = {
     async backtest(req, res, next) {
         if (req.method === 'POST') {     // OPTION不执行
+            res.send('1111');
             const queue = 'backtest';
             const strategy = strategyModel.toStrategyFile(req.body);
             strategy.testid = nanoid();

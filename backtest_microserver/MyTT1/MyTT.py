@@ -77,6 +77,11 @@ def CROSS(S1,S2):                      #判断向上金叉穿越 CROSS(MA(C,5),M
     CROSS_BOOL=IF(S1>S2, True ,False) 
     return (COUNT(CROSS_BOOL>0,2)==1)*CROSS_BOOL #上穿：昨天0 今天1   下穿：昨天1 今天0
 
+def CROSSOVER(S1, S2):
+    return CROSS(S1, S2)    
+
+def CROSSBLOW(S1, S2):
+    return CROSS(S2, S1)
   
 #------------------   2级：技术指标函数(全部通过0级，1级函数实现） ------------------------------
 def MACD(CLOSE,SHORT=12,LONG=26,M=9):             # EMA的关系，S取120日，和雪球小数点2位相同

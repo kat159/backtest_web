@@ -22,8 +22,6 @@ export default class LoginPage extends Component {
     }
     
     login = () => {
-        // console.log(this.password.value)
-        // console.log(this.username.value)
         axios.defaults.baseURL = 'http://127.0.0.1:3000';
         axios({
             method: 'get',
@@ -31,7 +29,7 @@ export default class LoginPage extends Component {
             params: this.userData,
         }).then(
             res => {
-                console.log('results：', res.data.results);
+                // console.log('result：', res.data.results);
                 const result = res.data.results[0];
                 
                 if (result === undefined) { 
@@ -43,10 +41,9 @@ export default class LoginPage extends Component {
                 } else { 
                     // sucessfully logged in
                     this.setState({invalidPassword: false, invalidUsername: false, UsernameExist: false, successSignUp: false})
-                    PubSub.publish('login_status', {loggedIn: true, username: this.userData.username});
-                    this.props.history.push('/test');
+                    PubSub.publish('login_status', {loggedIn: true, userId:result.id, username: this.userData.username});
+                    this.props.history.push('/test/' + result.id);
                 }
-                console.log(this.state)
             },
         )
     }

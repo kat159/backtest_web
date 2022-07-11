@@ -12,6 +12,7 @@ import PubSub from 'pubsub-js'
 export default class Test extends Component {
     
     state = {
+        userId: this.props.match.params.userId,
         name: '',
         positionType: 'Long',
         openCriterion: [
@@ -32,15 +33,45 @@ export default class Test extends Component {
         }
     }
 
+    onSaveClick = () => {
+        const {
+            userId, 
+            name, 
+            positionType,
+            openCriterionStr, 
+            closeCriterionStr, 
+            holdingDays, 
+            testParams, 
+        } = this.state;
+        console.log('Save Strategy: state =', this.state);
+        axios.defaults.baseURL = 'http://127.0.0.1:3000';
+        axios({
+            method: 'post',
+            url: '/strategies',
+            data: JSON.stringify(this.state),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(
+            res => {
+                PubSub.publish('report_metrics', res.data);
+                PubSub.publish('test_log', [Date(), this.state.name, ])
+            },
+            err => {console.log(err)}
+        )
+    }
+
     componentDidMount() {
         this.token1 = PubSub.subscribe('update_open_criterion', (msg, data) => {
-            const {criteria, criteriaStr} = data;
-            this.setState({openCriterion: criteria, openCriterionStr: criteriaStr});
+            const {criteria, criteriaStr, forceClosing} = data;
+            if (!forceClosing) 
+                this.setState({openCriterion: criteria, openCriterionStr: criteriaStr});
 
         })
         this.token2 = PubSub.subscribe('update_close_criterion', (msg, data) => {
-            const {criteria, criteriaStr} = data;
-            this.setState({closeCriterion: criteria, closeCriterionStr: criteriaStr});
+            const {criteria, criteriaStr, forceClosing} = data;
+            if (!forceClosing)
+                this.setState({closeCriterion: criteria, closeCriterionStr: criteriaStr});
 
         })
         this.token3 = PubSub.subscribe('update_holding_days', (msg, holdingDays) => {
@@ -60,7 +91,6 @@ export default class Test extends Component {
     
     submit = () => {
         console.log(this.state);
-        /*
         axios.defaults.baseURL = 'http://127.0.0.1:3000';
         axios({
             method: 'post',
@@ -76,20 +106,22 @@ export default class Test extends Component {
             },
             err => {console.log(err)}
         )
-        */
     }
+
+    
 
     render() {
         const {openCriterion, closeCriterion, testParams, openCriterionStr, closeCriterionStr} = this.state
         return (
             <div>    
-                <form action="http://localhost:3333/run_test" method="GET">
-                    <Header ref={c => this.header = c} />
-                    <PositionOpen criterion={openCriterion} criteriaStr={openCriterionStr} />
-                    <PositionClose criterion={closeCriterion} criteriaStr={closeCriterionStr} />
-                    <BacktestParam testParams={testParams} />
+                <form action="" method="GET">
+                    <Header userId={this.state.userId} ref={c => this.header = c} />
+                    <PositionOpen userId={this.state.userId} criterion={openCriterion} criteriaStr={openCriterionStr} />
+                    <PositionClose userId={this.state.userId} criterion={closeCriterion} criteriaStr={closeCriterionStr} />
+                    <BacktestParam userId={this.state.userId} testParams={testParams} />
                 </form>
-                <Link onClick={this.submit} className='btn btn-info' style={{marginLeft: '20px'}} to='/test-report'>Run Test</Link>
+                <Link onClick={this.submit} className='btn btn-info' style={{marginLeft: '20px', marginRight: '20px'}} to='/test-report'>Run Test</Link>
+                <button onClick={this.onSaveClick} className='btn btn-info' type='button'>Save Strategy</button>
             </div>
         )
     }

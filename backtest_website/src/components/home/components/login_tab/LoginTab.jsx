@@ -5,11 +5,11 @@ import PubSub from 'pubsub-js'
 export default class LoginTab extends Component {
 
     logout = () => {
-        PubSub.publish('login_status', {loggedIn: false}); 
+        PubSub.publish('login_status', {userId: -1, loggedIn: false}); 
+        console.log('Log out')
     }
 
     render() {
-        console.log('222222', this.props);
         const { loggedIn, username } = this.props;
         return (
             <div>
@@ -20,9 +20,9 @@ export default class LoginTab extends Component {
                         <button onClick={this.logout}>log out</button>
                     </div> : 
                     <div>
-                        <MyNavLink to='/login'>login</MyNavLink>
+                        <MyNavLink to={'/login/' + this.props.userId} >login</MyNavLink>
                         <span> / </span>
-                        <MyNavLink to='/login'>sign up</MyNavLink>
+                        <MyNavLink to={'/login/' + this.props.userId} >sign up</MyNavLink>
                     </div>
                 }
             </div>

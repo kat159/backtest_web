@@ -11,7 +11,7 @@ class UsersMedol {
     }
 
     findById(id) {
-        const sql = 'select * from users where user_id = ?';
+        const sql = 'select * from users where id = ?';
         return db.query(sql, [id]);
     }
 
@@ -21,12 +21,12 @@ class UsersMedol {
     }
 
     updateById(body, id) {
-        const sql = 'update users set ? where user_id = ?';
+        const sql = 'update users set ? where id = ?';
         return db.query(sql, [body, id]);
     }
 
     deleteById(id) {
-        const sql = 'delete from users where user_id = ?';
+        const sql = 'delete from users where id = ?';
         return db.query(sql, [id]);
     }
 

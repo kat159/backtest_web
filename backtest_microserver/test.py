@@ -14,7 +14,31 @@ OPEN = []
 HIGH = []
 LOW = []
 VOLUME = []
-def run_test(stocks: Dict,strategy: Dict,):  
+
+def run_test(stocks: Dict, strategy: Dict,):  
+    '''
+        Return: {
+            'dates': ['2020-01-01', '2020-01-02', ....],
+            'capital_flow': [1.01, 1.02, 1.1, 0.9, ....],
+            'financial_ratios': {
+                'standard-deviation': 0.3,
+                'XXX': xxx,
+                ...
+            }
+            'detailed_report': {
+                '2020-01-01': {
+                    [
+                        ['600000', '中国银行', 0.05(盈利)],
+                        ['600001', '工商银行', -0.03(盈利)],
+                    ]
+                },
+                '2020-01-02': {
+                    
+                }
+            }
+            
+        }
+    '''
     rets = {}
     freq = {}
     start_date, end_date = map(lambda v: to_date(v, ), strategy['testParams']['timePeriod'])
@@ -34,11 +58,11 @@ def run_test(stocks: Dict,strategy: Dict,):
         d = dict(zip(DATE, res))
         rets = my_dict.add_merge(rets, d)
         freq = my_dict.key_counter(freq, d)
-    capital =  int(strategy['testParams']['capital'])
+    # capital =  int(strategy['testParams']['capital'])
     rets = my_dict.div(rets, freq)                         # have to be in dict, since trading halt makes stocks' trading date vary
     rets = list(sorted(list(rets.items()), key=lambda item: item[0]))
     capital_flow = pd.Series(list(map(lambda tuple: tuple[1], rets)))
-    capital_flow *= capital
+    # capital_flow *= capital //先不用，直接返回return rates的数组更直观
     
     date = list(map(lambda tuple: tuple[0], rets))
     date = list(map(lambda d:str(d) , list(date)))
@@ -60,7 +84,6 @@ def returns(stock: Stock, open_signals, close_signals, holding_days):
         open_signals |= REF(open_signals, i)
     holding = open_signals                  # True if hold the stock, else false
     
-    
     return_rates =  IF(open_signals, (CLOSE - REF(CLOSE, 1)) / REF(CLOSE, 1), 0)
     return_rates[np.isnan(return_rates)] = 0
     returns = return_rates + 1
@@ -69,23 +92,18 @@ def returns(stock: Stock, open_signals, close_signals, holding_days):
     return returns
 
 def test_one_stock(stock: Stock, strategy: Dict):
-    open_signals = signals(stock, strategy['openCriterion'])
-    close_signals = signals(stock, strategy['closeCriterion'])
+    open_signals = signals(stock, strategy['openCriterionStr'])
+    close_signals = signals(stock, strategy['closeCriterionStr'])
     rets = returns(stock, open_signals, close_signals, int(strategy['holdingDays']))
-    pre = 0
-    # print(rets)
-    # print(rets)
     return rets
-    # print(strategy)
     
-def signals(stock: Stock, criterion: List[str]):
-    
+def signals(stock: Stock, criterion: str):
     s = [0]
-    code = 's[0]=' + '(' + ') &('.join(criterion).strip() + ')'
-    # print(code)
+    print('criterion:', criterion.upper())
+    code = 's[0]=' + criterion.upper()
+    print('Executing code:', code)
     exec(code)
-    # print('CLOSE:', CLOSE)
-    # print(s[0])
+    print('signals', s[0])
     return s[0]
 
 def returns_test(close, open_signals, close_signals, holding_days):
@@ -101,7 +119,6 @@ def returns_test(close, open_signals, close_signals, holding_days):
     return returns
 
 
-
 def demo(stock):
     CLOSE = stock.close
     s = [0]
@@ -109,8 +126,6 @@ def demo(stock):
     exec(code)
     print(s[0])
 
-
-    
 
 def helper(people):
     name, age = people.values() # 错误！！ values()的顺序不能保证！！

@@ -46,6 +46,7 @@ class Stock:
         self.volume = pd.Series(self.volume)
         self.turn_volume = pd.Series(self.turn_volume)
         self.date = pd.Series(self.date)
+        f.close()
         
 def get_all_stocks(path: str):
     files = os.listdir(path)
