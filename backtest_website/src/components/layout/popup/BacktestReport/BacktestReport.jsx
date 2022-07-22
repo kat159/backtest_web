@@ -97,10 +97,13 @@ export default function BacktestReport(props) {
     return (
         <>
             <Modal
+                width={800}
+                footer={null}
+                centered={true}
                 title={
                     <div
                         style={{
-                            width: '90%',
+                            width: '100%',
                             cursor: 'move',
                         }}
                         onMouseOver={() => {
@@ -130,9 +133,7 @@ export default function BacktestReport(props) {
                         <div ref={draggleRef}>{modal}</div>
                     </Draggable>
                 )}
-                width={1000}
-
-                footer={null}
+                
             >
 
                 {

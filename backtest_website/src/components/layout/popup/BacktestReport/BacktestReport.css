@@ -1,8 +1,8 @@
 .backtest-report-outer {
     position: absolute;
     z-index: 0;
-    width: 80%;
-    height: 80%;
+    width: 70%;
+    height: 70%;
     left: 10%;
     top: 10%;
     display: block;
