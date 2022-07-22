@@ -1,5 +1,6 @@
 const usersModel = require('../model/usersModel');
 const moment = require('moment');
+const { user } = require('../config/db.config');
 
 
 class UserService {
@@ -87,6 +88,33 @@ class UserService {
         const { results } = await usersModel.deleteById(id);
         if (results.affectedRows !== 1) return res.json({ message: 'Delete failed' });
         else res.json({ message: 'Successfully delete user' });
+    }
+
+    async handleUserLogin(req, res, next) {
+        const {username, password, } = req.body;
+        let {results, } = await usersModel.findByUsername(username);
+        console.log(results);
+        if (results.length === 0) {
+            res.json({message: 'username not exists', err_code: 1});
+        } else if (results[0].password !== password) {
+            res.json({message: 'incorrect password', err_code: 1});
+        } else {
+            const {id, } = results[0]
+            res.json({ message: 'Succesfully log in', err_code: 0, user_id: id, username: username});
+        }
+    }
+
+    async handleUserSignUp(req, res, next) {
+        const {username, password, } = req.body;
+        console.log(req.body)
+        let {results, } = await usersModel.findByUsername(username);
+        if (results.length === 0) {
+            const { results } = await usersModel.create(req.body);
+            console.log(results);
+            res.json({ message: 'Succesfully add user', err_code: 0 });
+        } else {
+            res.json({message: 'username exists', err_code: 1})
+        }
     }
 }
 

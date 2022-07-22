@@ -1,0 +1,9 @@
+.clickable-item:hover {
+    cursor: pointer;
+    border-color: rgb(43, 114, 161) !important;
+    border-width: 3px !important;
+    color: rgb(240, 184, 33);
+}
+.clickable-item > .clickable-item:hover {
+    
+}

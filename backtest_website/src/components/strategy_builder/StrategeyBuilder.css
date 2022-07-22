@@ -1,0 +1,15 @@
+.backtest-strategy-form {
+    /* max-width: 600px; */
+}
+.backtest-strategy-form .ant-form-item-label {
+    flex: 0 0 33.33333333%;
+}
+
+.criteria-selector .ant-tag:hover {
+    cursor: pointer;
+}
+
+.backtest-strategy-form .ant-form-item {
+    /* max-width: 600px; */
+    margin-bottom: 12px;
+}

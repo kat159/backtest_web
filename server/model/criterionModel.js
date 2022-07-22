@@ -5,6 +5,16 @@ class criterionMedol {
 
     }
 
+    findByUserIdAndPartialLeadingCriterionName(user_id, partialLeadingName) {
+        const sql = 'select * from criteria where user_id = ? and name like ?';
+        return db.query(sql, [user_id, partialLeadingName + '%'])
+    }
+
+    findByUserIdAndCriterionName(user_id, name) {
+        const sql = 'select * from criteria where user_id = ? and name = ?' ;
+        return db.query(sql, [user_id, name])
+    }
+
     findAll() {
         const sql = 'select * from criteria';
         return db.query(sql, []);
@@ -16,7 +26,7 @@ class criterionMedol {
     }
 
     findByUserId(user_id) {
-        const sql = 'select * from criteria where user_id = ?';
+        const sql = 'select * from criteria where user_id = ? order by id';
         return db.query(sql, [user_id]);
     }
 

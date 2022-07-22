@@ -6,11 +6,11 @@ import pandas as pd
 
 def metrics(capital_flow):
     return {
-        'currentCapital': round(capital_flow[len(capital_flow) - 1], 2),
-        'returnRate': round((capital_flow[len(capital_flow) - 1] / capital_flow[0] - 1) * 100, 2),
-        'sharpe': round(sharpe(capital_flow), 2),
-        'maxDrawdown': round(max_drawdown(capital_flow) * 100, 2),
-        'standardDeviation': round(std(capital_flow / capital_flow[0]) * 100, 2)
+        'currentCapital': round(capital_flow[len(capital_flow) - 1], 2) if len(capital_flow) else 0 ,
+        'returnRate': round((capital_flow[len(capital_flow) - 1] / capital_flow[0] - 1) * 100, 2) if len(capital_flow) else 0,
+        'sharpe': round(sharpe(capital_flow), 2) if len(capital_flow) else 0,
+        'maxDrawdown': round(max_drawdown(capital_flow) * 100, 2) if len(capital_flow) else 0,
+        'standardDeviation': round(std(capital_flow / capital_flow[0]) * 100, 2) if len(capital_flow) else 0,
     }
 
 def sharpe(capital_flow, risk_free_return=0.02):

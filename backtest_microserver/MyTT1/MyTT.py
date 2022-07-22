@@ -2,6 +2,10 @@
   
 import numpy as np; import pandas as pd
 
+def fillna(S, V):
+    S[pd.isna(S)] = V
+    return pd.Series(S).values
+
 #------------------ 0级：核心工具函数 --------------------------------------------      
 def RD(N,D=3):   return np.round(N,D)        #四舍五入取3位小数 
 def RET(S,N=1):  return np.array(S)[-N]      #返回序列倒数第N个值,默认返回最后一个
@@ -13,7 +17,21 @@ def MA(S,N):              #求序列的N日平均值，返回序列
     return pd.Series(S).rolling(N).mean().values    
 
 def REF(S, N=1):          #对序列整体下移动N,返回序列(shift后会产生NAN)    
-    return pd.Series(S).shift(N).values  
+    # print(type(S[0]) is np.bool_, type(S[0]))
+    # **注意： shift操作会把numpy.bool_ 变成bool， bool的取反操作会变成数字
+    res = pd.Series(S).shift(N).values
+    if len(S) > 0 and (type(S[0]) is np.bool_ or type(S[0]) is bool): 
+        # 不同的操作可能产生不同类型的布尔值，有些操作会影响，比如python bool ~False不是True, numpy bool ~False是true
+        # bool_s1 = [True, True, False, False]
+        # bool_s2 = [True, False, False, True]
+        # bool_s1 = pd.Series(bool_s1)
+        # bool_s2 = pd.Series(bool_s2)
+        # print(type(bool_s1.shift(1)[1]))  # bool
+        # print(type(bool_s1[1]))           # numpy.bool_
+        # print(bool_s1 & bool_s1.shift(1)) # 不影响这部分操作: [False, True, False, False], 但是有些会影响，看下面bool取反边数字
+        res = fillna(res, False)  
+        res = np.array(res, dtype=bool)     # 把bool变成numpy.bool_, 不然做取反操作会出错，bool取反会变成数字
+    return res
 
 def DIFF(S, N=1):         #前一个值减后一个值,前面会产生nan 
     return pd.Series(S).diff(N)  #np.diff(S)直接删除nan，会少一行
@@ -77,22 +95,47 @@ def CROSS(S1,S2):                      #判断向上金叉穿越 CROSS(MA(C,5),M
     CROSS_BOOL=IF(S1>S2, True ,False) 
     return (COUNT(CROSS_BOOL>0,2)==1)*CROSS_BOOL #上穿：昨天0 今天1   下穿：昨天1 今天0
 
-def CROSSOVER(S1, S2):
+def CROSSABOVE(S1, S2):
     return CROSS(S1, S2)    
 
-def CROSSBLOW(S1, S2):
+def CROSSBELOW(S1, S2):
     return CROSS(S2, S1)
   
 #------------------   2级：技术指标函数(全部通过0级，1级函数实现） ------------------------------
+
 def MACD(CLOSE,SHORT=12,LONG=26,M=9):             # EMA的关系，S取120日，和雪球小数点2位相同
     DIF = EMA(CLOSE,SHORT)-EMA(CLOSE,LONG);  
-    DEA = EMA(DIF,M);      MACD=(DIF-DEA)*2
-    return RD(DIF),RD(DEA),RD(MACD)
+    return RD(DIF)
 
-def KDJ(CLOSE,HIGH,LOW, N=9,M1=3,M2=3):           # KDJ指标
+def MACD_SIGNAL(CLOSE,SHORT=12,LONG=26,M=9):             # EMA的关系，S取120日，和雪球小数点2位相同
+    DIF = EMA(CLOSE,SHORT)-EMA(CLOSE,LONG);  
+    DEA = EMA(DIF,M)
+    return RD(DEA)
+
+def KDJ_K(CLOSE,HIGH,LOW, N=9,M1=3,M2=3):           # KDJ指标
+    RSV = (CLOSE - LLV(LOW, N)) / (HHV(HIGH, N) - LLV(LOW, N)) * 100
+    K = EMA(RSV, (M1*2-1))
+    return K
+
+def KDJ_D(CLOSE,HIGH,LOW, N=9,M1=3,M2=3):           # KDJ指标
+    RSV = (CLOSE - LLV(LOW, N)) / (HHV(HIGH, N) - LLV(LOW, N)) * 100
+    K = EMA(RSV, (M1*2-1));    D = EMA(K,(M2*2-1))
+    return D
+
+def KDJ_J(CLOSE,HIGH,LOW, N=9,M1=3,M2=3):           # KDJ指标
     RSV = (CLOSE - LLV(LOW, N)) / (HHV(HIGH, N) - LLV(LOW, N)) * 100
     K = EMA(RSV, (M1*2-1));    D = EMA(K,(M2*2-1));        J=K*3-D*2
-    return K, D, J
+    return J
+
+# def MACD(CLOSE,SHORT=12,LONG=26,M=9):             # EMA的关系，S取120日，和雪球小数点2位相同
+#     DIF = EMA(CLOSE,SHORT)-EMA(CLOSE,LONG);  
+#     DEA = EMA(DIF,M);      MACD=(DIF-DEA)*2
+#     return RD(DIF),RD(DEA),RD(MACD)
+
+# def KDJ(CLOSE,HIGH,LOW, N=9,M1=3,M2=3):           # KDJ指标
+#     RSV = (CLOSE - LLV(LOW, N)) / (HHV(HIGH, N) - LLV(LOW, N)) * 100
+#     K = EMA(RSV, (M1*2-1));    D = EMA(K,(M2*2-1));        J=K*3-D*2
+#     return K, D, J
 
 def RSI(CLOSE, N=24):                           # RSI指标,和通达信小数点2位相同
     DIF = CLOSE-REF(CLOSE,1) 

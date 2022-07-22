@@ -1,0 +1,31 @@
+.criteria-builder-outer {
+    position: absolute;
+    z-index: 0;
+    width: 80%;
+    height: 80%;
+    left: 10%;
+    top: 10%;
+    display: block;
+    background-color: #c4cbff;
+    border: 1px solid black;
+    padding: 1px;
+}
+
+.criteria-builder-handle {
+    width: 100% ;
+    height: 23px ;
+    display: block ;
+    background-color: #3b458a ;
+    color: white ;
+}
+
+.clickable-tag:hover {
+    cursor: pointer;
+    border-color: rgb(43, 114, 161);
+}
+
+.clickable-item:hover {
+    cursor: pointer;
+    border-color: rgb(43, 114, 161) !important;
+    border-width: 3px !important;
+}

@@ -1,6 +1,6 @@
 from datetime import *
 
-def to_date(date, format='%Y-%m-%d'):
+def to_date(date, format='%Y/%m/%d'):
     return datetime.strptime(date, format).date()
 
 def next_day(date):

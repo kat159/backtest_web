@@ -1,29 +1,20 @@
-// function join(criterion) {
-//     const newC = []
-//     for (const criteria of criterion) {
-//         // console.log('criteria:' + criteria)
-//         newC.push(criteria.join(''))
-//     }
-//     return newC
-// }
-
-// const toPython = (strategy) => {
-//     // console.log(strategy);
-//     const {openCriterion, closeCriterion} = strategy
-//     strategy.openCriterion = join(openCriterion);
-//     strategy.closeCriterion = join(closeCriterion);
-//     return strategy
-// }
-
-// module.exports.toStrategyFile = toPython
-
 const db = require('../config/db');
 
 class strategyMedol {
     constructor() {
 
     }
-    
+
+    findByUserIdAndPartialLeadingStrategyName(user_id, partialLeadingName) {
+        const sql = 'select * from strategies where user_id = ? and name like ?';
+        return db.query(sql, [user_id, partialLeadingName + '%'])
+    }
+
+    findByUserIdAndStrategyName(user_id, name) {
+        const sql = 'select * from strategies where user_id = ? and name = ?' ;
+        return db.query(sql, [user_id, name])
+    }
+
     findAll() {
         const sql = 'select * from strategies';
         return db.query(sql, []);
@@ -34,9 +25,9 @@ class strategyMedol {
         return db.query(sql, [id]);
     }
 
-    findByUserId(username) {
-        const sql = 'select * from strategies where user_id = ?';
-        return db.query(sql, [username]);
+    findByUserId(user_id) {
+        const sql = 'select * from strategies where user_id = ? order by id';
+        return db.query(sql, [user_id]);
     }
 
     updateById(body, id) {

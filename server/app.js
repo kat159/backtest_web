@@ -10,6 +10,7 @@ var usersRouter = require('./routes/users');
 var backtestRouter = require('./routes/backtest');
 var strategiesRouter = require('./routes/strategies');
 var criteriaRouter = require('./routes/criteria');
+var backtestLogsRouter = require('./routes/backtestLog');
 
 var app = express();
 
@@ -35,7 +36,7 @@ app.use('/users', usersRouter);
 app.use('/backtest', backtestRouter);
 app.use('/strategies', strategiesRouter);
 app.use('/criteria', criteriaRouter);
-
+app.use('/backtest_logs', backtestLogsRouter);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

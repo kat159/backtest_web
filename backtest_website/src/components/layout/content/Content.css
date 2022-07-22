@@ -1,0 +1,49 @@
+.backtest-builder-whole-page {
+    margin-left: 30px;
+    max-width: 600px;
+}
+
+.backtest-builder-whole-page .button-group-bottem {
+    float: right;
+}
+
+.my-action-tag:hover {
+    color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.my-action-tag {
+    color: rgba(0, 0, 0, 0.45) !important; 
+}
+
+.my-table {
+
+}
+
+.my-table-header {
+    border: solid;
+    border-width: 0px;
+    border-bottom-width: 1px;
+    border-color: rgb(189, 185, 185);
+    background-color: #fafafa;
+    font-size: medium;
+    font-weight: 600;
+}
+
+.my-table-header-item {
+    min-width: 100px;
+}
+
+.my-table-row {
+    border: solid;
+    border-width: 0px;
+    border-bottom-width: 1px;
+    border-color: rgb(207, 205, 205);
+}
+
+.my-table-row:hover {
+    background-color: #fafafa;
+}
+
+.my-table-item {
+    min-width: 200px;
+}

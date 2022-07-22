@@ -1,19 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const { 
-    getStrategies, 
+    getStrategy, 
     getStrategyById, 
     addStrategy, 
     updateStrategyById, 
     deleteStrategyById,
+    suggestAllWithNameAndUserId
 } = require('../service/strategyService');
+const { route } = require('./users');
 
 /* GET users listing. */
-router.get('/', getStrategies);
+router.get('/', getStrategy);
 router.get('/:id', getStrategyById);
 router.post('/', addStrategy);
 router.put('/:id', updateStrategyById);
 router.delete('/:id', deleteStrategyById);
+router.post('/suggest', suggestAllWithNameAndUserId)
 
 module.exports = router; 
  
