@@ -1,13 +1,11 @@
-const func = async () => {
-    setTimeout(()=>{}, 1000);
-    return 1
+console.log('111'.toString())
+console.log([1, 2, 3].toString())
+n = 1
+console.log(Number.isInteger(1.1))
+
+console.log(typeof([1, 2].join(1)))
+
+console.log('1/2/3'.split('/'))
+for (const s of '1/2/3'.split('/')) {
+    console.log(s)
 }
-
-const func2 = async () => {
-    const a = await func()
-    console.log(a)
-}
-
-func2()
-
-console.log(1111, [].map(v => v));

@@ -1,53 +1,214 @@
 const axios = require('axios')
 
 const baseURL = 'http://127.0.0.1:3000/criteria_item';
-// Types: ['Number', 'Exact Number', 'Bool', 'Any']
+// paramTypes: ['Number', 'Exact Number', 'Bool', 'Integer'] // 
+// paramTypes 允许Number，那么就应该允许Integer, 因为Exact Number肯定要被带入函数变成Series， 所以Integer肯定会是Series
+// paramTypes 允许 Exact， 就该允许Integer
+// 允许Number，不一定允许Exact， 看是不是必须Series
+
+// returnTypes: ['Number', 'Bool', 'Integer', 或者数字123表示根据index] 
+// returnType不包括Exact Number, 只有input return Exact Number， 通过parseint或 ===''判断
 class CriterionItemService {
+    NUMBER_STR = 'Number'
+    EXACT_NUMBER_STR = 'Exact Number'
+    BOOL_STR = 'Bool'
+    INTEGER_STR = 'Integer'
+    _INTEGER_OR_NUMBER = 'Number/Integer'
+    _NUMBER_OR_EXACT_NUMBER = 'Number/Exact Number'
+    _INTEGER_OR_EXACT_NUMBER = 'Integer/Exact Number'
+    _ALL_TYPE_OF_NUMBER = 'Number/Integer/Exact Number'
+    _BOOL_OR_NUMBER = 'Bool/Number'
+    _INTEGER_BOOL_OR_NUMBER = 'Number/Integer/Bool'
+
     getAll(userId) {
         const indicators = {
+            // Trend
             'MA': {
                 name: 'MA',
                 type: 'Indicator',
                 category: 'Trend',
                 leadingText: 'MA',
                 description: 'Moving Average',
-                paramTypes: ['Number', 'Exact Number'],
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: 'Number'
+                returnType: this.NUMBER_STR
+            },
+            'EMA': {
+                name: 'EMA',
+                type: 'Indicator',
+                category: 'Trend',
+                leadingText: 'EMA',
+                description: 'Exponential Moving Average',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR
+            },
+            'SMA': {
+                name: 'SMA',
+                type: 'Indicator',
+                category: 'Trend',
+                leadingText: 'SMA',
+                description: 'Simple Moving Average',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR
             },
             'MACD': {
                 name: 'MACD',
                 type: 'Indicator',
                 category: 'Trend',
                 leadingText: 'MACD',
-                description: 'Moving Average Convergence Divergence',
-                usage: ['MACD(series, SHORT, LONG, M)',
-                    'a: Type must be Series. Normally Closing price in common usage',
-                    'b: Type could be Exact Number or Series. Normally'
-                ],
-                paramTypes: ['Number', 'Exact Number', 'Exact Number', 'Exact Number'],
+                description: 'Typical Moving Average Convergence Divergence',
+                usage: 'MACD(CLOSE, 12, 26, 9)',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: 'Number'
+                returnType: this.NUMBER_STR
             },
+            'MACD_SIGNAL': {
+                name: 'MACD_SIGNAL',
+                type: 'Indicator',
+                category: 'Trend',
+                leadingText: 'MACD_SIGNAL',
+                description: 'Return the signal line of Moving Average Convergence Divergence',
+                usage: 'MACD(CLOSE, 12, 26, 9)',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR
+            },
+            'BBI': {
+                name: 'BBI',
+                type: 'Indicator',
+                category: 'Trend',
+                leadingText: 'BBI',
+                description: 'Bull and Bear Index',
+                usage: 'BBI(CLOSE, 3, 6, 12, 20)',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR
+            },
+            // Oscillator
             'RSI': {
                 name: 'RSI',
                 type: 'Indicator',
                 category: 'Oscillator',
                 leadingText: 'RSI',
                 description: 'Relative Strength Index',
-                paramTypes: [],
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: 'Number'
+                returnType: this.NUMBER_STR,
+                usage: 'RSI(CLOSE, 24)',
             },
+            'EMV': {
+                name: 'EMV',
+                type: 'Indicator',
+                category: 'Oscillator',
+                leadingText: 'EMV',
+                description: 'Ease of Movement Value',
+                paramTypes: [this._INTEGER_OR_NUMBER, this.NUMBER_STR, this.NUMBER_STR, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+                usage: 'EMV(HIGH, LOW, VOL, 14, 9)',
+            },
+            'DPO': {
+                name: 'DPO',
+                type: 'Indicator',
+                category: 'Oscillator',
+                leadingText: 'DPO',
+                description: 'Detrended Price Oscillator',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+                usage: 'DPO(CLOSE, 20, 10, 6)',
+            },
+            // Volatility
             'BOLL': {
                 name: 'BOLL',
                 type: 'Indicator',
                 category: 'Volatility',
                 leadingText: 'BOLL',
                 description: 'Bollinger Bands',
-                paramTypes: [],
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: 'Number'
+                returnType: this.NUMBER_STR,
+                usage: 'BOLL(CLOSE, 20, 2)'
+            },
+            'KDJ_K': {
+                name: 'KDJ_K',
+                type: 'Indicator',
+                category: 'Volatility',
+                leadingText: 'KDJ_K',
+                description: 'the K line of KDJ',
+                paramTypes: [this._INTEGER_OR_NUMBER, this.NUMBER_STR, this.NUMBER_STR, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+                usage: 'KDJ_K(CLOSE, HIGH, LOW, 9, 3, 3)'
+            },
+            'KDJ_D': {
+                name: 'KDJ_D',
+                type: 'Indicator',
+                category: 'Volatility',
+                leadingText: 'KDJ_D',
+                description: 'the D line of KDJ',
+                paramTypes: [this._INTEGER_OR_NUMBER, this.NUMBER_STR, this.NUMBER_STR, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+                usage: 'KDJ_D(CLOSE, HIGH, LOW, 9, 3, 3)'
+            },
+            'KDJ_J': {
+                name: 'KDJ_J',
+                type: 'Indicator',
+                category: 'Volatility',
+                leadingText: 'KDJ_J',
+                description: 'the J line of KDJ',
+                paramTypes: [this._INTEGER_OR_NUMBER, this.NUMBER_STR, this.NUMBER_STR, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+                usage: 'KDJ_J(CLOSE, HIGH, LOW, 9, 3, 3)'
+            },
+            'ATR': {
+                name: 'ATR',
+                type: 'Indicator',
+                category: 'Volatility',
+                leadingText: 'ATR',
+                description: 'Average True Range',
+                paramTypes: [this._INTEGER_OR_NUMBER, this.NUMBER_STR, this.NUMBER_STR, this._INTEGER_OR_EXACT_NUMBER,],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+                usage: 'ATR(CLOSE, HIGH, LOW, 20)'
+            },
+            'VR': {
+                name: 'VR',
+                type: 'Indicator',
+                category: 'Volatility',
+                leadingText: 'VR',
+                description: 'The volatility ratio',
+                paramTypes: [this._INTEGER_OR_NUMBER, this.NUMBER_STR, this._INTEGER_OR_EXACT_NUMBER,],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+                usage: 'VR(CLOSE, VOL, 26)'
+            },
+            // Others
+            'PSY': {
+                name: 'PSY',
+                type: 'Indicator',
+                category: 'Others',
+                leadingText: 'PSY',
+                description: 'Psychological line, PSY(S, N): return the ratio of the number of periods where S was rising to the total periods, in N periods',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+                usage: 'PSY(CLOSE, 12, 6)',
+            },
+            'BLJJ': {
+                name: 'BLJJ',
+                type: 'Indicator',
+                category: 'Others',
+                leadingText: 'BLJJ',
+                description: '',
+                paramTypes: [this._INTEGER_OR_NUMBER, this.NUMBER_STR, this.NUMBER_STR, ],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+                usage: 'BLJJ(CLOSE, HIGH, LOW)',
             },
         }
         const marketData = {
@@ -58,7 +219,7 @@ class CriterionItemService {
                 description: 'Closing Price',
                 leadingText: 'CLOSE',
                 paramTypes: [],
-                returnType: 'Number'
+                returnType: this.NUMBER_STR
             },
             'Opening Price': {
                 name: 'Opening Price',
@@ -67,7 +228,7 @@ class CriterionItemService {
                 description: 'Opening Price',
                 leadingText: 'OPEN',
                 paramTypes: [],
-                returnType: 'Number'
+                returnType: this.NUMBER_STR
             },
             'Highest Price': {
                 name: 'Highest Price',
@@ -76,7 +237,7 @@ class CriterionItemService {
                 description: 'Highest Price',
                 leadingText: 'HIGH',
                 paramTypes: [],
-                returnType: 'Number'
+                returnType: this.NUMBER_STR
             },
             'Lowest Price': {
                 name: 'Lowest Price',
@@ -85,19 +246,20 @@ class CriterionItemService {
                 description: 'Lowest Price',
                 leadingText: 'LOW',
                 paramTypes: [],
-                returnType: 'Number'
+                returnType: this.NUMBER_STR
             },
         }
         const functions = {
+            // Math
             'Multiply': {
                 name: 'Multiply',
                 type: 'Function',
                 category: 'Math',
                 description: '',
                 leadingText: '',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._ALL_TYPE_OF_NUMBER, this._ALL_TYPE_OF_NUMBER],
                 joinChar: ' * ',
-                returnType: 'Number'
+                returnType: '+-*/'
             },
             'Divide': {
                 name: 'Divide',
@@ -105,9 +267,9 @@ class CriterionItemService {
                 category: 'Math',
                 description: '',
                 leadingText: '',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._ALL_TYPE_OF_NUMBER, this._ALL_TYPE_OF_NUMBER],
                 joinChar: ' / ',
-                returnType: 'Number'
+                returnType: '+-*/'
             },
             'Plus': {
                 name: 'Plus',
@@ -115,9 +277,9 @@ class CriterionItemService {
                 category: 'Math',
                 description: '',
                 leadingText: '',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._ALL_TYPE_OF_NUMBER, this._ALL_TYPE_OF_NUMBER],
                 joinChar: ' + ',
-                returnType: 'Number'
+                returnType: '+-*/'
             },
             'Minus': {
                 name: 'Minus',
@@ -125,29 +287,111 @@ class CriterionItemService {
                 category: 'Math',
                 description: '',
                 leadingText: '',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._ALL_TYPE_OF_NUMBER, this._ALL_TYPE_OF_NUMBER],
                 joinChar: ' - ',
-                returnType: 'Number'
+                returnType: '+-*/'
             },
+            'Round': {
+                name: 'Round',
+                type: 'Function',
+                category: 'Math',
+                description: 'ROUND(S) return the nearest integer of S',
+                leadingText: 'ROUND',
+                paramTypes: [this._INTEGER_OR_NUMBER],
+                joinChar: ', ',
+                returnType: this.INTEGER_STR
+            },
+            'Count': {
+                name: 'Count',
+                type: 'Function',
+                category: 'Math',
+                description: 'COUNT(B, N) count the number of periods when B is true in N periods',
+                leadingText: 'COUNT',
+                paramTypes: [this.BOOL_STR, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.INTEGER_STR
+            },
+            'Sum In N Periods': {
+                name: 'Sum In N Periods',
+                type: 'Function',
+                category: 'Math',
+                description: 'SUM(S, N): return accumulated sum of S in N periods',
+                leadingText: 'SUM',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: 0
+            },
+            'Highest Value in N Periods': {
+                name: 'Highest Value in N Periods',
+                type: 'Function',
+                category: 'Math',
+                description: 'HHV(S, N): return highest value of S in N periods',
+                leadingText: 'HHV',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: 0
+            },
+            'Lowest Value in N Periods': {
+                name: 'Lowest Value in N Periods',
+                type: 'Function',
+                category: 'Math',
+                description: 'LLV(S, N): return Lowest value of S in N periods',
+                leadingText: 'LLV',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: 0
+            },
+            'Standard Deviation': {
+                name: 'Standard Deviation',
+                type: 'Function',
+                category: 'Math',
+                description: 'STD(S, N): Return the standard deviation in N periods',
+                leadingText: 'STD',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR
+            },
+            'Average Standard Deviation': {
+                name: 'Average Standard Deviation',
+                type: 'Function',
+                category: 'Math',
+                description: 'AVEDEV(S, N): Returns the average of the absolute deviations of S from their mean in N periods',
+                leadingText: 'AVEDEV',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR
+            },
+            'Linear Regression Slope': {
+                name: 'Linear Regression Slope',
+                type: 'Function',
+                category: 'Math',
+                description: 'SLOPE(S, N): Return the slope of linear regression of S in N periods',
+                usage: 'SLOPE(Number, Number / Exact Number)',
+                leadingText: 'SLOPE',
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR
+            },
+            // Pattern 
             'Cross Above': {
                 name: 'Cross Above',
                 type: 'Function',
                 category: 'Pattern',
-                description: '',
+                description: 'CROSSABOVE(S1, S2), return True if S1 cross above S2',
                 leadingText: 'CROSSABOVE',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_NUMBER],
                 joinChar: ', ',
-                returnType: 'Bool'
+                returnType: 'Bool',
             },
             'Cross Blow': {
                 name: 'Cross Blow',
                 type: 'Function',
                 category: 'Pattern',
-                description: '',
+                description: 'CROSSABOVE(S1, S2), return True if S1 cross blow S2',
                 leadingText: 'CROSSBELOW',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_NUMBER],
                 joinChar: ', ',
-                returnType: 'Bool'
+                returnType: 'Bool',
             },
             'Lower Than': {
                 name: 'Lower Than',
@@ -155,7 +399,7 @@ class CriterionItemService {
                 category: 'Pattern',
                 description: '',
                 leadingText: '',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._ALL_TYPE_OF_NUMBER, this._ALL_TYPE_OF_NUMBER],
                 joinChar: ' < ',
                 returnType: 'Bool'
             },
@@ -165,7 +409,7 @@ class CriterionItemService {
                 category: 'Pattern',
                 description: '',
                 leadingText: '',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._ALL_TYPE_OF_NUMBER, this._ALL_TYPE_OF_NUMBER],
                 joinChar: ' > ',
                 returnType: 'Bool'
             },
@@ -175,10 +419,11 @@ class CriterionItemService {
                 category: 'Pattern',
                 description: '',
                 leadingText: '',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._ALL_TYPE_OF_NUMBER, this._ALL_TYPE_OF_NUMBER],
                 joinChar: ' = ',
                 returnType: 'Bool'
             },
+            // Logic
             'and': {
                 name: 'and',
                 type: 'Function',
@@ -199,15 +444,66 @@ class CriterionItemService {
                 joinChar: ' or ',
                 returnType: 'Bool',
             },
+            'if': {
+                name: 'if',
+                type: 'Function',
+                category: 'Logic',
+                description: 'IF( A, B, C ): return B if A is True else C',
+                leadingText: 'IF',
+                paramTypes: [this.BOOL_STR, this._ALL_TYPE_OF_NUMBER, this._ALL_TYPE_OF_NUMBER],
+                joinChar: ', ',
+                returnType: this.NUMBER_STR,
+            },
+            // Reference
             'REF': {
                 name: 'REF',
                 type: 'Function',
                 category: 'Reference',
-                description: 'REF( A, B ) : return value of A at B days ago',
+                description: 'REF(S, N) : return value of S at N periods ago',
                 leadingText: 'REF',
-                paramTypes: ['Number', 'Number'],
+                paramTypes: [this._INTEGER_BOOL_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
                 returnType: 0,
+            },
+            'VALAT': {
+                name: 'VALAT',
+                type: 'Function',
+                category: 'Reference',
+                description: 'VALAT(S, N) : return the value of S at Nth period',
+                leadingText: 'VALAT',
+                paramTypes: [this._INTEGER_BOOL_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
+                joinChar: ', ',
+                returnType: 0,
+            },
+            'WHERE': {
+                name: 'WHERE',
+                type: 'Function',
+                category: 'Reference',
+                description: 'WHERE(S, B) : return S if B is True',
+                leadingText: 'WHERE',
+                paramTypes: [this._INTEGER_BOOL_OR_NUMBER, this.BOOL_STR],
+                joinChar: ', ',
+                returnType: 0,
+            },
+            'WHENLAST': {
+                name: 'WHENLAST',
+                type: 'Function',
+                category: 'Reference',
+                description: 'WHENLAST(B) : return the closest index of the last time when B is True',
+                leadingText: 'WHENLAST',
+                paramTypes: [this.BOOL_STR],
+                joinChar: ', ',
+                returnType: this.INTEGER_STR,
+            },
+            'PERIODSLAST': {
+                name: 'PERIODSLAST',
+                type: 'Function',
+                category: 'Reference',
+                description: 'PERIODSLAST(B) : return the number of periods from now to the closest time when B is True',
+                leadingText: 'PERIODSLAST',
+                paramTypes: [this.BOOL_STR],
+                joinChar: ', ',
+                returnType: this.INTEGER_STR,
             },
         }
         const itemDict = {
@@ -217,7 +513,7 @@ class CriterionItemService {
             'dummy': ['Market Data', 'Function', 'Indicator',]
         }
         const categories = {
-            'Indicator': ['Trend', 'Oscillator', 'Volatility', 'Support/Resistance'],
+            'Indicator': ['Trend', 'Oscillator', 'Volatility', 'Others'],
             'Market Data': ['Price', 'Volume'],
             'Function': ['Pattern', 'Math', 'Logic', 'Reference',],
         }

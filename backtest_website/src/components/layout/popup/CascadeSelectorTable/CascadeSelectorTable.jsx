@@ -30,7 +30,6 @@ export default function CascadeSelectorTable(props) {
             {
                 display: 'block',
                 padding: '10px',
-                border: '1px solid black',
             }
         }>  
             <tbody>

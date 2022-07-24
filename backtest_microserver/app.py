@@ -52,6 +52,7 @@ def backtest():
     elif request.method == 'POST':
         strategy = request.get_json()
         test_report = run_test(STOCKS, strategy)
+        print(strategy)
         test_report = json.dumps(test_report)
         # print(test_report)
         return test_report

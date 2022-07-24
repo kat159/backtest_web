@@ -37,23 +37,16 @@ def BLJJ(stock: Stock, close_weight, high_weight, low_weight,
     # print('res = ', res[len(res)-10:])
     return BLJJ_list
 
-
-stock = Stock(r'C:\Users\insect\Desktop\股票数据\SH#600000.txt')
-closeW, highW, lowW = 2, 1, 1
-firstEMA = [2, 2, 2, 2, 2, 2, 2]
-accuracy = 1000
-do_second_slope = True
-secondEMA = [2, 2, 1]
-bljj = BLJJ(stock, closeW, highW, lowW, firstEMA, accuracy, do_second_slope, secondEMA)
-print(bljj)
-'''
-[ 0.          0.          1.69089527 ... -0.87653355 -1.44011438
- -2.20484141]
-'''
-
-l1 = [3, 4, 5]
-l2 = [1, 2, 3]
-buy = [True, False, True]
-l1, l2, buy = pd.Series(l1), pd.Series(l2), pd.Series(buy)
-res = IF(buy, l1 - l2, 0)
-print(res)
+if __name__ == '__main__':
+    stock = Stock(r'C:\Users\insect\Desktop\股票数据\SH#600000.txt')
+    closeW, highW, lowW = 2, 1, 1
+    firstEMA = [2, 2, 2, 2, 2, 2, 2]
+    accuracy = 1000
+    do_second_slope = True
+    secondEMA = [2, 2, 1]
+    bljj = BLJJ(stock, closeW, highW, lowW, firstEMA, accuracy, do_second_slope, secondEMA)
+    print(type(bljj))
+    '''
+    [ 0.          0.          1.69089527 ... -0.87653355 -1.44011438
+    -2.20484141]
+    '''

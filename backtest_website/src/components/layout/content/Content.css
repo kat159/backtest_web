@@ -47,3 +47,15 @@
 .my-table-item {
     min-width: 200px;
 }
+
+/* 去掉箭头 */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {      
+    -webkit-appearance: none !important;
+    margin: 0;
+}
+
+/* 去掉input边框 */
+input {
+    outline: none;
+}

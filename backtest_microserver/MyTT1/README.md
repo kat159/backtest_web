@@ -117,9 +117,9 @@ LAST(CLOSE>OPEN,5,3)                    #5天前到3天前是否都收阳线
 EXIST(CLOSE>OPEN, 5)                   #最近5天是否有一天收阳线
 ```
 
-* 上一次条件成立到当前的周期：BARSLAST
+* 上一次条件成立到当前的周期：PERIODSLAST
 ```python
-BARSLAST(CLOSE/REF(CLOSE)>=1.1)         #上一次涨停到今天的天数
+PERIODSLAST(CLOSE/REF(CLOSE)>=1.1)         #上一次涨停到今天的天数
 ```
 
 * 返回序列的线性回归斜率：`SLOPE`

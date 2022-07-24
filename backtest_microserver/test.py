@@ -16,7 +16,7 @@ LOW = []
 VOLUME = []
 COMMISSION = [0]
 BID_ASK_SPREAD = [0]
-HOLDING_DAYS = [1]
+MAX_HOLDING_DAYS = [1]
 POSITION_TYPE = ['Long']
 CAPITAL_AT_RISK = [1]
 
@@ -56,7 +56,7 @@ def run_test(stocks: Dict, strategy: Dict,):
     params = strategy['testParams']
     COMMISSION[0] = float(params['commission']) / 100
     BID_ASK_SPREAD[0] = float(params['bidAskSpread'])
-    HOLDING_DAYS[0] = int(strategy['holdingDays'])
+    MAX_HOLDING_DAYS[0] = int(strategy['holdingDays'])
     POSITION_TYPE[0] = strategy['positionType']
     CAPITAL_AT_RISK[0] = float(params['capitalAtRisk']) / 100
 
@@ -100,11 +100,18 @@ def run_test(stocks: Dict, strategy: Dict,):
     return res
 
 
+
 def returns(stock: Stock, open_signals, close_signals, holding_days):
-    for i in range(HOLDING_DAYS[0]):
-        # 每天都要根据close-signal卖出，如果同天买入卖出信号，不买
-        open_signals &= (~close_signals)
-        open_signals |= REF(open_signals, i)
+    # **老方法： 错误！！！
+    # 假设open_signal = [0, 1, 0, 0, 0]
+    # 第二次i=1循环变成  [0, 1, 1, 0, 0]
+    # 第三次i=2循环就变成[0, 1, 1, 1, 1]了
+    # 不能原地变，又原地利用！
+    
+    # for i in range(MAX_HOLDING_DAYS[0]):
+    #     # 每天都要根据close-signal卖出，如果同天买入卖出信号，不买
+    #     open_signals &= (~close_signals)
+    #     open_signals |= REF(open_signals, i)
     holding = open_signals                  # True if hold the stock, else false
     hold_from_yesterday = REF(holding, 1)  # 当年买入要从后一天开始算收益
     # print('hold:', hold_from_yesterday)
@@ -135,6 +142,42 @@ def returns(stock: Stock, open_signals, close_signals, holding_days):
     # returns = returns.cumprod()
     
     return return_rates
+
+# def returns(stock: Stock, open_signals, close_signals, holding_days):
+#     for i in range(MAX_HOLDING_DAYS[0]):
+#         # 每天都要根据close-signal卖出，如果同天买入卖出信号，不买
+#         open_signals &= (~close_signals)
+#         open_signals |= REF(open_signals, i)
+#     holding = open_signals                  # True if hold the stock, else false
+#     hold_from_yesterday = REF(holding, 1)  # 当年买入要从后一天开始算收益
+#     # print('hold:', hold_from_yesterday)
+#     # 当天盘尾买入的手续费 + spread, 总费率
+    
+#     buy_cost = IF((~hold_from_yesterday) & REF(hold_from_yesterday, -1),  # 今天没持股，明天持股，说明今天买了
+#                   (CLOSE * COMMISSION[0] + BID_ASK_SPREAD[0]) / CLOSE,
+#                   0
+#                   )
+    
+#     # 当天盘尾卖出的手续费 + spread, 总费率
+#     sell_cost = IF(hold_from_yesterday & (~REF(hold_from_yesterday, -1)),  # 今天持股，明天没持股，说明今天卖了
+#                    (CLOSE * COMMISSION[0] + BID_ASK_SPREAD[0]) / CLOSE,
+#                    0
+#                    )
+#     # 今天持股收益
+#     holding_returns = IF(hold_from_yesterday,
+#                          (CLOSE - REF(CLOSE, 1)) / REF(CLOSE, 1),
+#                          0
+#                          )
+#     # 今日净收益
+#     return_rates = holding_returns - sell_cost - buy_cost
+#     return_rates[np.isnan(return_rates)] = 0
+#     # 如果是short，取负
+#     return_rates = -return_rates if POSITION_TYPE[0] == 'Short' else return_rates
+#     # 累进收益率不应该在这算，要按总的平均算，这个只是一直股票的
+#     # returns = return_rates + 1
+#     # returns = returns.cumprod()
+    
+#     return return_rates
 
 
 def test_one_stock(stock: Stock, strategy: Dict):
