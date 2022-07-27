@@ -10,6 +10,28 @@
     border: 1px solid black;
     padding: 1px;
 }
+.criterion-temporary-item {
+    
+}
+.temporary-item-name-input {
+    display: inline-block;
+    min-width: 20px;
+    outline: none;
+    border: solid;
+    border-color: #c4cbff;
+    /* background-color: white; */
+    border-width: 1px;
+    /* background-color: #c4cbff; */
+}
+.temporary-item-name-input:focus {
+    background-color: white;
+    outline: none;
+}
+
+.temporary-item {
+    /* display: inline-block;
+    background-color: white; */
+}
 
 .criteria-builder-table-selector {
 }
@@ -41,4 +63,25 @@
     cursor: pointer;
     border-color: rgb(43, 114, 161) !important;
     border-width: 3px !important;
+}
+
+.my-expanding-icon {
+    font-size: 10px;
+    transition: color 0.5s;
+    transition: font-size 0.5s;
+    color: rgba(0, 0, 0, 0.45) !important; 
+}
+.my-expanding-icon:hover {
+    color: rgb(0, 119, 255) !important;
+    /* font-size: 20px; */
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.exact-number-input {
+    outline: auto;
+    outline-style: solid;
+    outline-width: 0px;
+    border-width: 0px;
+    height: 19px;
 }

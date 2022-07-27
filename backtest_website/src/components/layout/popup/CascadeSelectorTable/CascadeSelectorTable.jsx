@@ -10,7 +10,7 @@ export default function CascadeSelectorTable(props) {
 
     const {itemClassificationList, itemDict, } = criterionItemService.getAll();
     const [typeItemsSelectedList, setTypeItemsSelected] = useState(['dummy']);
-    const {onCriterionItemClickMsg, } = props // 告诉CriteriaBuilder 有用的item点击了
+    const {onCriterionItemClickMsg, toolTips} = props // 告诉CriteriaBuilder 有用的item点击了
     const onSelectorItemClickMsg = 'criteria-table-selector-type-item'  // 告诉Table， 类型item点击了，有用的item用上面的msg
 
     useEffect(() => {
@@ -37,7 +37,7 @@ export default function CascadeSelectorTable(props) {
                     {
                         typeItemsSelectedList.map((typeItemSelected, index) => {
                             const colItems = itemClassificationList[index][typeItemsSelectedList[index]]
-                            return <TableCol selectedItemName={typeItemsSelectedList[index+1]} items={colItems} onSelectorItemClickMsg={onSelectorItemClickMsg} onCriterionItemClickMsg={onCriterionItemClickMsg} key={nanoid()} index={index} itemDict={itemDict} />
+                            return <TableCol toolTips={toolTips} selectedItemName={typeItemsSelectedList[index+1]} items={colItems} onSelectorItemClickMsg={onSelectorItemClickMsg} onCriterionItemClickMsg={onCriterionItemClickMsg} key={nanoid()} index={index} itemDict={itemDict} />
                         })
                     }
                 </tr>

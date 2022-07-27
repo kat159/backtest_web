@@ -4,7 +4,7 @@ import { Tooltip } from 'antd';
 import { nanoid } from 'nanoid';
 
 export default function TableItem(props) {
-    const { items, onSelectorItemClickMsg, onCriterionItemClickMsg, index, itemDict, item, selectedItemName } = props
+    const { items, onSelectorItemClickMsg, onCriterionItemClickMsg, index, itemDict, item, selectedItemName, toolTips} = props
     const isCriterionItem = (itemDict[item] !== undefined);
     const onClick = () => {
         if (itemDict[item]) { // criterion item
@@ -64,7 +64,7 @@ export default function TableItem(props) {
 
     const res = <div key={nanoid()} className='clickable-item' style={{
         backgroundColor: selectedItemName === item ? '#6578b5' : 'white',
-        width: '110%',
+        // width: '110%',
         minWidth: '200px',
         height: '30px',
         textIndent: '20px',
@@ -83,6 +83,7 @@ export default function TableItem(props) {
     return (
         isCriterionItem ?
             <Tooltip
+                mouseEnterDelay={toolTips ? 0.5 : 99999}
                 placement='left'
                 title={toolTipTitle()}
                 color='cyan'

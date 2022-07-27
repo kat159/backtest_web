@@ -42,7 +42,10 @@ def REF(S, N=1):  # 对序列整体下移动N,返回序列(shift后会产生NAN)
         return res
     else:           #根据序列分别map
         N = pd.Series(N)
-        indices = N.index - N               # 找到对应的index list
+        S = pd.Series(S)
+        indices = pd.Series(N.index - N)
+        # indices = pd.Series(N.index - N).replace(np.nan, -1)               # 找到对应的index list
+        print(indices.values)
         return indices.map(S).values       # indices.map(values)
 
 def VALAT(S, N):                            # return the value of S at Nth period
@@ -126,8 +129,18 @@ def WHERE(S, B):                       # return S if B else NaN
     B = pd.Series(B)
     return S.where(B).values
 
+# **TODO
+def WHEN(B, N):                        # return the closest index of the Nth most recent time when B is True
+    pass
+    
+
 def WHENLAST(B):                        # return the closest index of the last time when B is True
+    B=pd.Series(B)
     return pd.Series(B.index).where(B).ffill().values
+
+# **TODO
+def PERIODSWHEN(B, N):
+    pass
 
 def PERIODSLAST(S_BOOL):  # 上一次条件成立到当前的周期
     # where false的地方会产生nan， 再利用**ffill**向前填充nan， 最后当前index减去前面结果，就是最近的
