@@ -68,6 +68,7 @@ export default function TableItem(props) {
         minWidth: '200px',
         height: '30px',
         textIndent: '20px',
+        paddingRight: '20px',
         lineHeight: '30px',
         borderStyle: 'solid',
         borderColor: '#a1a1a1',

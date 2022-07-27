@@ -14,9 +14,9 @@ export default function TableCol(props) {
         }}>
             <div
                 style={{
-                    maxHeight: isItemCol ? '200px' : '',
-                    overflow: isItemCol ? 'scroll' : '',
-                    overflowX: isItemCol ? 'hidden' : '',
+                    maxHeight: isItemCol ? '145px' : '',
+                    overflow: isItemCol && items.length > 5 ? 'scroll' : '',
+                    overflowX: isItemCol && items.length > 5 ? 'hidden' : '',
                 }}
             >
                 {

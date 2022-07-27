@@ -9,7 +9,7 @@ export default function CriteriaTable(props) {
       <thead className='my-table-header' >
         <tr >
           <td className='my-table-header-item' style={{padding: '5px', paddingRight: '20px'}}>Name</td>
-          <td className='my-table-header-item' style={{padding: '5px', paddingRight: '20px'}}>Function</td>
+          <td className='my-table-header-item' style={{padding: '5px', paddingRight: '20px'}}>Description</td>
           <td className='my-table-header-item' style={{padding: '5px', paddingRight: '20px'}}>Action</td>
         </tr>
       </thead>

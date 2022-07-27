@@ -25,13 +25,14 @@ class CriterionService {
             }
         )
     }
-    async addCriterion(userId, criterionName, criterionStr, nestedCriterion, temporaryCriterionList) {
+    async addCriterion(userId, criterionName, criterionStr, nestedCriterion, temporaryCriterionList, description) {
         const criterion = {
             user_id: userId,
             name: criterionName,
             criterion_str: criterionStr,
             criterion_arr: JSON.stringify(nestedCriterion),
-            temporary_criterion_list: JSON.stringify(temporaryCriterionList)
+            temporary_criterion_list: JSON.stringify(temporaryCriterionList),
+            description: description
         }
         return axios({
             method: 'post',
@@ -42,13 +43,14 @@ class CriterionService {
             },
         })
     }
-    async updateCriterion(criterionId, userId, criterionName, criterionStr, nestedCriterion, temporaryCriterionList) {
+    async updateCriterion(criterionId, userId, criterionName, criterionStr, nestedCriterion, temporaryCriterionList, description) {
         const criterion = {
             name: criterionName,
             user_id: userId,
             criterion_str: criterionStr,
             criterion_arr: JSON.stringify(nestedCriterion),
-            temporary_criterion_list: JSON.stringify(temporaryCriterionList)
+            temporary_criterion_list: JSON.stringify(temporaryCriterionList),
+            description: description,
         }
         return axios({
             method: 'put',

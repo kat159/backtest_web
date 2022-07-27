@@ -8,7 +8,7 @@ import CascadeSelectorTable from './CascadeSelectorTable/CascadeSelectorTable';
 import criterionItemService from '../../../services/criterionItemService';
 import CriterionBuilder from './CriterionBuilder/CriterionBuilder';
 import { useRef } from 'react';
-import { Alert, Input, Form, Space, message, Tag } from 'antd';
+import { Alert, Input, Form, Space, message, Tag, Button } from 'antd';
 import criterionService from '../../../services/criterionService';
 import CriterionSearchSelector from '../../selector/CriterionSearchSelector';
 
@@ -63,7 +63,7 @@ export default function CriteriaBuilder(props) {
     const [autoValidating, setAutoValidating] = useState(true)
     const [toolTips, setToolTips] = useState(true)
 
-    const finalCriterionId = 'FiNaL#' + nanoid()  // 识别是否是final
+    const finalCriterionId = '_F_i_N_a_L_#'// 识别是否是final
 
     const [finalNestedCriterion, setFinalNestedCriterion] = useState([]);   // no dummy bracket
 
@@ -71,11 +71,14 @@ export default function CriteriaBuilder(props) {
     const [editingCriterionId, setEditingCriterionId] = useState(undefined);
     // **TODO 7月26日： buiding criterion中 点击了icon，就把对应的id加入expanding set中，在criterionBuilder中遇到这个就展开，不遇到就只显示名字
 
+    const [initialCriterion, setInitialCriterion] = useState(undefined);
+
     useEffect(() => {   // 初始化 criterion， 如果传入 criterionBeingEdited
         const { criterionBeingEdited, } = props
         const initializeCriterion = async () => {
             if (criterionBeingEdited) {
                 const data = await criterionService.getCriterionById(criterionBeingEdited.criterionId);
+                setInitialCriterion(data)
                 const { criterion_arr, temporary_criterion_list, name } = data
                 setTemporaryCriterionList(temporary_criterion_list)
                 setFinalNestedCriterion(criterion_arr)
@@ -105,7 +108,7 @@ export default function CriteriaBuilder(props) {
         } else if (isFinalCriterionId(editingCriterionId)) {
             handleSaveToFinalCriterion()
         } else {
-            console.error('System error: id not found in [handleFinishEditingCriterion]');
+            console.error(`System error: id ${editingCriterionId} not found in [handleFinishEditingCriterion]`);
         }
     }
     const handleCancelEditingCriterion = () => {
@@ -607,7 +610,11 @@ export default function CriteriaBuilder(props) {
         if (criterionBeingEdited) { // editing
             console.log('Editing Criterion Click...', criterionBeingEdited)
             const { criterionId, } = criterionBeingEdited
-            const { data } = await criterionService.updateCriterion(criterionId, userId, nameInputRef.current.input.value, criterionStr, finalNestedCriterion, temporaryCriterionList)
+            const { data } = await criterionService.updateCriterion(
+                criterionId, userId, nameInputRef.current.input.value,
+                criterionStr, finalNestedCriterion, temporaryCriterionList,
+                descriptionInputRef.current.resizableTextArea.textArea.value
+            )
             if (data.err_code === 0) {
                 const { onFinishCallback, } = props
                 if (onFinishCallback) {
@@ -621,7 +628,9 @@ export default function CriteriaBuilder(props) {
         } else {
             console.log('Adding Criterion Click..')
             const { data } = await criterionService.addCriterion(
-                userId, nameInputRef.current.input.value, criterionStr, finalNestedCriterion, temporaryCriterionList
+                userId, nameInputRef.current.input.value, criterionStr,
+                finalNestedCriterion, temporaryCriterionList,
+                descriptionInputRef.current.resizableTextArea.textArea.value
             )
             if (data.err_code === 0) {
                 PubSub.publish(onFinishMsg, { criteria: finalNestedCriterion, criteriaStr: criterionStr, temporaryCriterionList: temporaryCriterionList })
@@ -827,25 +836,41 @@ export default function CriteriaBuilder(props) {
                             <Input status={criterionNameExists ? 'error' : ''} defaultValue={criterionBeingEdited ? criterionBeingEdited.criterionName : ''} onKeyUp={handleNameInputKeyUp} ref={nameInputRef} style={{ width: '150px', height: '30px' }} />
                             {criterionNameExists && <span style={{ color: 'red' }}>name exists</span>}
                         </Space>
-                        <Space style={{marginLeft: '23px' }} className='criteria-builder-criterion-builder'><span>Description: </span>
+                        <Space style={{ marginLeft: '23px' }} className='criteria-builder-criterion-builder'>
+                            <span>Description: </span>
                             <Input.TextArea
-                                onFocus={(e)=>{e.stopPropagation();e.preventDefault();
+                                onFocus={(e) => {
+                                    e.stopPropagation(); e.preventDefault();
                                     e.currentTarget.style.height = '50px'
                                 }}
-                                onBlur={(e)=>{e.stopPropagation();e.preventDefault();
+                                onBlur={(e) => {
+                                    e.stopPropagation(); e.preventDefault();
                                     e.currentTarget.style.height = '20px'
                                 }}
-                                
+
                                 maxLength={100}
                                 defaultValue={criterionBeingEdited ? criterionBeingEdited.description : ''}
                                 ref={descriptionInputRef}
-                                style={{ width: '250px', height: '20px', }}
+                                style={{
+                                    width: '250px',
+                                    height: '20px',
+                                }}
                             />
                         </Space>
 
                         <div><b>Final Criterion:</b></div>
                         <div>
                             {stringfyCriterion(finalNestedCriterion)}
+                            <EditOutlined className='my-action-tag'
+                                style={{
+                                    fontSize: '10px',
+                                    marginLeft: '10px'
+                                }}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleCriterionEditClick(finalCriterionId)
+                                }} />
                         </div>
 
                         <div> {/* Current Criteria*/}
@@ -856,7 +881,20 @@ export default function CriteriaBuilder(props) {
                                         getTemporaryCriterionById(editingCriterionId).name :
                                         'final criterion')}
                                 )
-                                <b> :</b>
+                                <b> : </b>
+                                <Space>
+                                    {editingCriterionId &&
+                                        <Button onClick={(e) => {
+                                            e.currentTarget.blur()
+                                            handleFinishEditingCriterion()
+                                        }} 
+
+                                        >Finish</Button>
+                                    }
+                                    {editingCriterionId &&
+                                        <button onClick={handleCancelEditingCriterion}>Cancel</button>
+                                    }
+                                </Space>
                             </div>
                             <div style={{ marginTop: '1px', marginBottom: '10px' }} ref={criterionBuilderRef} >
                                 {CriterionBuilder(nestedBuilidingCriterion[0], '0',
@@ -867,14 +905,14 @@ export default function CriteriaBuilder(props) {
                                     'Bool',
                                     handleExactNumberInputChange,
                                     temporaryCriterionList,
-                                    toolTips
+                                    toolTips,
+                                    handleClearSelected,
                                 )}
                             </div>
+                            
                             <span ref={saveTempCriterionButtonRef}>
-                                {editingCriterionId && <button onClick={handleFinishEditingCriterion} >Finish Edit</button>}
-                                {editingCriterionId && <button onClick={handleCancelEditingCriterion}>Cancel Edit</button>}
                                 <button onClick={handleSaveToTemporaryCriterion} type='button'>Save as new variable</button>
-                                <button onClick={handleClearSelected} type='button'>Clear</button>
+                                {/* <button onClick={handleClearSelected} type='button'>Clear</button> */}
                                 <button onClick={handleSaveToFinalCriterion} type='button'>Save as final criterion</button>
                                 {/* <button onClick={() => { validateCriterionParamType(nestedBuilidingCriterion, editingCriterionId) }} type='button'>Validate</button> */}
                                 <div >

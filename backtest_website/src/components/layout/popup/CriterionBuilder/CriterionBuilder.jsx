@@ -4,7 +4,7 @@ import PubSub from 'pubsub-js'
 import { useEffect } from 'react'
 import { useRef } from 'react'
 import { Button, Input, message, Tooltip } from 'antd'
-import { ColumnWidthOutlined, DoubleRightOutlined, EditOutlined, ExpandAltOutlined } from '@ant-design/icons'
+import { CloseOutlined, ColumnWidthOutlined, DoubleRightOutlined, EditOutlined, ExpandAltOutlined } from '@ant-design/icons'
 
 export default function CriterionBuilder(
     curNestedCriterion,
@@ -17,6 +17,7 @@ export default function CriterionBuilder(
     handleInputValueChange,
     temporaryCriterionList,
     toolTips,
+    handleDeleteClick,
 ) {
     if (requiredReturnType === 'Exact Number') {
 
@@ -172,26 +173,69 @@ export default function CriterionBuilder(
                 children.push(<span key={nanoid()} >{joinChar}</span>)
             }
             children.push(
-                CriterionBuilder(curNestedCriterion[i], curRoute + i, curSelectedRoute, selectionStatus, itemDict, onClickMsg, paramTypes[i - 1], handleInputValueChange, temporaryCriterionList, toolTips)
+                CriterionBuilder(
+                    curNestedCriterion[i], curRoute + i, curSelectedRoute,
+                    selectionStatus, itemDict, onClickMsg, paramTypes[i - 1],
+                    handleInputValueChange, temporaryCriterionList, toolTips, handleDeleteClick,
+                )
             )
         }
-        returnComponent = <span
-            onMouseOver={onMouseOver}
-            onMouseOut={onMouseOut}
-            onClick={onClick}
-            key={nanoid()}
-            style={{
-                ...selectionStyle,
-                cursor: 'pointer',
-            }}
-        >
-            {leadingText}{paramTypes.length > 0 && '( '}
-            {children}
-            {paramTypes.length > 0 && ' )'}
+        const key = nanoid()
+        returnComponent = <span>
+            <span
+                onMouseOver={e => {
+                    onMouseOver(e)
+                    // console.log(e.currentTarget)
+                    // e.currentTarget.querySelector('#anticon-close' + key).style.fontSize = '10px'
+
+                }
+                }
+                onMouseOut={e => {
+                    onMouseOut(e)
+                    // console.log(e.currentTarget)
+                    // e.currentTarget.querySelector('#anticon-close' + key).style.fontSize = '0px'
+
+                }
+
+                }
+                onClick={onClick}
+                key={key}
+                style={{
+                    ...selectionStyle,
+                    cursor: 'pointer',
+                }}
+            >
+                {leadingText}{paramTypes.length > 0 && '( '}
+                {children}
+                {paramTypes.length > 0 && ' )'}
+
+            </span>
+            {
+                curSelectedRoute === curRoute &&
+                <CloseOutlined id={'anticon-close' + key} className='my-action-tag'
+                    style={{
+                        fontSize: '10px'
+                    }}
+                    onClick={(e) => {
+                        handleDeleteClick(e);
+                    }}
+                />
+            }
         </span>
+
     }
 
     return (
-        returnComponent
+        <span key={nanoid()}
+            onMouseOut={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onMouseOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onMouseEnter={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onMouseLeave={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        >
+            {
+                returnComponent
+            }
+        </span>
+
     )
 }

@@ -64,7 +64,8 @@ export default function CriterionSearchInput(props) {
                             criterionStr: item.criterion_str,
                             criterionId: item.id,
                             criterionName: item.name,
-                            nestedCriterion: item.criterion_arr
+                            nestedCriterion: item.criterion_arr,
+                            description: item.description,
                         }));
                         callback(data);
                     }
@@ -112,7 +113,7 @@ export default function CriterionSearchInput(props) {
     }
 
     const options = data.map((d) =>
-        <Option value={d.criterionId} title={d.criterionStr} key={d.value}>
+        <Option value={d.criterionId} title={d.description} key={d.value}>
             {d.text}
             <EditOutlined className='my-action-tag' v={d} onClick={handleEdit(d)} style={
                 {
