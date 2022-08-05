@@ -12,6 +12,9 @@ import moment from 'moment';
 import { DATE_FORMAT } from '../../../../config/config';
 import backtestService, { formDataToBackendFormat } from '../../../../services/backtestService';
 import BacktestReport from '../../popup/BacktestReport/BacktestReport';
+import criterionService from '../../../../services/criterionService';
+import myArray from '../../../../utils/myArray';
+import DraggablePoppup from '../../popup/DraggablePoppup';
 
 
 
@@ -22,7 +25,6 @@ export default function MyStrategies() {
   const handleCreateFinish = () => {
     form.validateFields().then(
       values => {
-        console.log(values)
         strategyService.addStrategy(values).then(
           res => {
             const result = res.data
@@ -61,7 +63,6 @@ export default function MyStrategies() {
   const retrieveData = () => {
     strategyService.getAll().then(
       res => {
-        console.log(res)
         setStrategyList(res.data.results);
       }
     )
@@ -70,7 +71,6 @@ export default function MyStrategies() {
   const onDeleteButtonClick = (strategyId) => {
     return () => {
       const res = strategyService.daleteStrategy(strategyId);
-      console.log(res);
       retrieveData();
     }
   }
@@ -78,8 +78,16 @@ export default function MyStrategies() {
   const [strategyEditing, setStrategyEditing] = useState(undefined);
 
   const onEditButtonClick = (strategy) => {
-    return () => {
+    return async () => {
       const values = strategyService.fromBackendFormat(strategy);
+      const { closeCriteriaIdList, openCriteriaIdList } = values
+      const filter = async (criterionId, index) => {          // 移除被删掉的criterion
+        const res = await criterionService.getCriterionById(criterionId)
+        return res.err_code === undefined || res.err_code === 0
+      }
+      values.closeCriteriaIdList = await myArray.filterAsync(closeCriteriaIdList, filter)
+      values.openCriteriaIdList = await myArray.filterAsync(openCriteriaIdList, filter)
+
       form.setFieldsValue(values);          // form=useForm()之后，这个form不会被父组件State影响,value只能手动重置
       setStrategyEditing(values);
     }
@@ -90,7 +98,7 @@ export default function MyStrategies() {
       setDisplayingReport(true)
       let data = strategyService.fromBackendFormat(strategy);
       data = await backtestService.runTestWithFormData(data);
-      console.log(data)
+      // console.log(data)
       setTestReport({ ...data.data, strategy: strategy });
     }
   }
@@ -145,7 +153,7 @@ export default function MyStrategies() {
         if (e.target.value === value) { // **把要搜过的value存在本地，300ms之后通过对比之前要搜索的内容和e.target当前的value对比，防止打字过程中的无效搜索
           fetch(e.target.value, setStrategyList);
         } else {
-          console.log('Searched value:', value, 'current value:', e.target.value, 'stop searching because value not match as type too fast')
+          // console.log('Searched value:', value, 'current value:', e.target.value, 'stop searching because value not match as type too fast')
         }
       }, 300
     )
@@ -163,7 +171,21 @@ export default function MyStrategies() {
   }
   return (
     <div >
-      {testReport && <BacktestReport testReport={testReport} setTestReport={setTestReport} setDisplayingReport={setDisplayingReport} visible={displayingReport} />}
+      {
+        testReport &&
+        <DraggablePoppup
+          handleForceClosingClick={()=>{setTestReport(undefined)}}
+          title='Test Report'
+          content={
+            <BacktestReport
+              testReport={testReport}
+              setTestReport={setTestReport}
+              setDisplayingReport={setDisplayingReport}
+              visible={displayingReport}
+            />
+          }
+        />
+      }
       {
         strategyEditing ?
           <div className='backtest-builder-whole-page'>

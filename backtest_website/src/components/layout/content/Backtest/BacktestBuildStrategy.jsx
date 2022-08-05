@@ -21,11 +21,9 @@ export default function BacktestBuildStrategy() {
   const handleSave = () => {
     form.validateFields().then(
       values => {
-        console.log(values)
         strategyService.addStrategy(values).then(
           res => {
             const result = res.data
-            console.log(result)
             if (result.err_code === 0) {
               message.success('Strategy Saved');
             } else if (result.message === 'Strategy Name Exists') {
@@ -82,11 +80,9 @@ export default function BacktestBuildStrategy() {
     setDisplayingReport(true)
     const res = await backtestService.runTestWithFormData(values);
     setTestReport({...res.data, strategy: values})
-    console.log(res.data)
   }
 
   const handleReset = (e) => {
-    console.log(e.target)
     form.resetFields();
   }
 

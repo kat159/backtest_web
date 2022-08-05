@@ -19,7 +19,7 @@ export default function MyCriteria() {
     const [isEditingCriterion, setIsEditingCriterion] = useState(false)
 
     useEffect(() => {
-        console.log(userId);
+        
         retrieveCriterionData();
 
         const token = PubSub.subscribe(onEditBottunClickMsg, (msg, data) => {
@@ -51,17 +51,16 @@ export default function MyCriteria() {
     const retrieveCriterionData = () => {
         criterionService.getAll(userId).then(
             res => {
-                console.log(res);
                 const { err_code, results, } = res.data
                 if (err_code === 0) {
                     setCriterionList(results);
-                    console.log('MyCriteriaPage receive request results:', results)
+                    // console.log('MyCriteriaPage receive request results:', results)
                 } else {
-                    console.log('MyCriteriaPage receive request error:', err_code)
+                    // console.log('MyCriteriaPage receive request error:', err_code)
                 }
             },
             err => {
-                console.log(err);
+                // console.log(err);
             }
         );
     }
@@ -99,7 +98,7 @@ export default function MyCriteria() {
                 if (e.target.value === value) { // **把要搜过的value存在本地，300ms之后通过对比之前要搜索的内容和e.target当前的value对比，防止打字过程中的无效搜索
                     fetch(e.target.value, setCriterionList);
                 } else {
-                    console.log('Searched value:', value, 'current value:', e.target.value, 'stop searching because value not match as type too fast')
+                    // console.log('Searched value:', value, 'current value:', e.target.value, 'stop searching because value not match as type too fast')
                 }
             }, 300
         )

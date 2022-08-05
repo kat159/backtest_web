@@ -1,27 +1,38 @@
-import { Modal } from 'antd';
+import { CloseOutlined } from '@ant-design/icons'
 import React from 'react'
-import { useState } from 'react';
-import { useRef } from 'react';
-import Draggable from 'react-draggable';
+import Draggable from 'react-draggable'
+import './DraggablePoppup.css'
 
 export default function DraggablePoppup(props) {
-    const {onOkCallback, onCancelCallback, contentElement} = props
-
-    const handleCancel = () => {
-        onCancelCallback(false);
-      };
-
+    const { handleForceClosingClick, content, title, zIndexOfMask, maskStyle, contentStyle } = props
     return (
-        <Draggable handle='.ant-modal-header'>
-            <Modal title='aaaaaaaaaa'
-                visible={true} 
-                onCancel={handleCancel}
-
-            >
-                <p>Some contents...</p>
-                <p>Some contents...</p>
-                <p>Some contents...</p>
-            </Modal>
-        </Draggable>
-    );
+        <div>
+            {/* <div className='draggable-mask' style={{
+                // zIndex: zIndexOfMask ? zIndexOfMask : '2',
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                // backgroundColor: 'black',
+                ...maskStyle
+            }} /> */}
+            <Draggable handle='.draggable-poppup-handle'>
+                <div style={{ zIndex: '2' }} className='draggable-poppup-outer' >
+                    <div className='draggable-poppup-handle' >
+                        &nbsp; {title}
+                        <CloseOutlined
+                            onClick={handleForceClosingClick}
+                            style={{
+                                float: 'right',
+                                marginTop: '4px',
+                                marginRight: '3px',
+                                ...contentStyle
+                            }} />
+                    </div>
+                    {content}
+                </div>
+            </Draggable>
+        </div>
+    )
 }

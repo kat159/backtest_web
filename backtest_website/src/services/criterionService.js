@@ -12,7 +12,7 @@ class CriterionService {
             params: {userId: userId}
         }).then(
             res => {
-                console.log(res)
+                // console.log(res)
                 const {err_code, results, } = res.data
                 for (const criterion of results) {
                     criterion.criterion_arr = JSON.parse(criterion.criterion_arr)
@@ -85,7 +85,10 @@ class CriterionService {
             url: baseURL + "/" + id,
         }).then(
             res => {
-                const {err_code, results, } = res.data
+                const {err_code, message, results, } = res.data
+                if (err_code !== 0) {
+                    return res.data
+                }
                 const data = results[0]
                 data.criterion_arr = JSON.parse(data.criterion_arr)
                 data.temporary_criterion_list = JSON.parse(data.temporary_criterion_list)
@@ -119,7 +122,7 @@ class CriterionService {
     async decodeCriterionById(id) {         // return: explicitly decoded criterion string
         // console.log(this)
         const criterion = await this.getCriterionById(id);
-        console.log(222, id, criterion)
+        // console.log(id, criterion)
         const {criterion_arr, temporary_criterion_list, } = criterion
         return this.stringfyCriterion(criterion_arr, temporary_criterion_list, true)
     }

@@ -26,6 +26,29 @@ CAPITAL_AT_RISK = [1]
 # 'Local Balanced': 昨天持100只股,今天卖出50只,买入100只, 那么只有今天卖出剩余的50%资金去买入100只股票
 PISITION_SELF_BALANCED_TYPE = 'Global Balanced'
 
+def formula_executor(stock: Stock, formula: str):
+    # init_one_stock_data(stock)    // **多个request会不会让global混乱？ 下面的test是不是也会让global混乱？
+    CLOSE = stock.close
+    OPEN = stock.open
+    HIGH = stock.high
+    LOW = stock.low
+    VOLUME = stock.volume
+    DATE = stock.date
+    s = [0]
+    code = 's[0]=' + formula
+    # print('Executing code:', code)
+    exec(code)
+    # print('signals', s[0])
+    return s[0]
+
+def init_one_stock_data(stock: Stock):
+    global CLOSE, OPEN, HIGH, LOW, VOLUME
+    CLOSE = stock.close
+    OPEN = stock.open
+    HIGH = stock.high
+    LOW = stock.low
+    VOLUME = stock.volume
+    DATE = stock.date
 
 def run_test(stocks: Dict, strategy: Dict,):
     '''
@@ -59,8 +82,12 @@ def run_test(stocks: Dict, strategy: Dict,):
     MAX_HOLDING_DAYS[0] = int(strategy['holdingDays'])
     POSITION_TYPE[0] = strategy['positionType']
     CAPITAL_AT_RISK[0] = float(params['capitalAtRisk']) / 100
-
-    start_date, end_date = map(lambda v: to_date(v,), strategy['testParams']['timePeriod'])
+    hold_to_tomorrow_stocks = {}
+    hold_from_tomorrow_stocks = {}
+    open_today_stocks = {}
+    close_today_stocks = {}
+    start_date, end_date = map(lambda v: to_date(
+        v,), strategy['testParams']['timePeriod'])
     for stock in stocks.values():
         global CLOSE, OPEN, HIGH, LOW, VOLUME
         CLOSE = stock.close
@@ -71,35 +98,82 @@ def run_test(stocks: Dict, strategy: Dict,):
         DATE = stock.date
         valid_dates = (start_date <= DATE) & (DATE <= end_date)
         # filter(if valid_date: remain; else pop())
-        CLOSE = CLOSE[valid_dates].values   # values会让pandas.Series 变为 numpy.ndarray
-        VOLUME = VOLUME[valid_dates].values # 可以让index重置
+        # values会让pandas.Series 变为 numpy.ndarray
+        CLOSE = CLOSE[valid_dates].values
+        VOLUME = VOLUME[valid_dates].values  # 可以让index重置
         LOW = LOW[valid_dates].values       # **否则pop掉的东西不会让index重置,
-        HIGH = HIGH[valid_dates].values     # 比如s = pd.Series([False,True, False, True])
+        # 比如s = pd.Series([False,True, False, True])
+        HIGH = HIGH[valid_dates].values
         OPEN = OPEN[valid_dates].values     # s[s]会返回 1:True, 3:True,
-        DATE = DATE[valid_dates].values     # 这样是s[0]会报错,因为index 0 不存在,只能s.iloc[0]取得第一个数
-        res = test_one_stock(stock, strategy)
-        d = dict(zip(DATE, res))
-        rets = my_dict.add_merge(rets, d)
-        freq = my_dict.key_counter(freq, d)
+        # 这样是s[0]会报错,因为index 0 不存在,只能s.iloc[0]取得第一个数
+        DATE = DATE[valid_dates].values
+        res = test_one_stock(stock, strategy)   # 该股票每个index的return rate
+        d = dict(zip(DATE, res))        # 获得该股票每个date对应的return
+        rets = my_dict.add_merge(rets, d)     # accum sum目前所有股票每个date对应的return
+        freq = my_dict.key_counter(freq, d)   # accum count 每个date的有多少股票存在，（有些股票出现的晚）
+        
+        open_signals = signals(stock, strategy['openCriterionStr'])
+        close_signals = signals(stock, strategy['closeCriterionStr'])
+        # 该股票每个index的holding sig
+        hold_to_tomorrow_sig = get_holding_to_next_day_signals(open_signals, close_signals) 
+        hold_from_yesterday_sig = REF(hold_to_tomorrow_sig, 1)
+        
+        # ****List comprehensions 一般比map更快
+        hold_from_yesterday_data = [{
+            'symbol': stock.symbol,
+            'return': res[i]
+        } if hold_from_yesterday_data[i] else [] for i in range(len(hold_from_yesterday_data))]
+        hold_from_yesterday_time_series_data = dict(zip(DATE, hold_from_yesterday_data))
+    # 每个date 昨天持有过夜到今天的stocks{'2021-01-01': [{symbol: '600000', 'return': 0.01}, ...], '2021-02-02':... }
+        hold_from_tomorrow_stocks = my_dict.merge_concat(hold_from_yesterday_time_series_data, hold_from_tomorrow_stocks)
+        
+        # 该股票每个index当天的open sig（已考虑持有情况, 必然发生在不持有时)
+        open_today = get_open_today(hold_from_yesterday_sig)
+        
+        # 该股票每个index当天的close sig（已考虑持有情况, 必然发生在不持有时)
+        close_today = get_close_today(hold_to_tomorrow_sig)
+        
+        
+        
+        hold_to_tomorrow_symbol_as_sig = map(lambda v: [stock.symbol] if v else [], hold_to_tomorrow_sig)
+        hold_to_tomorrow_date_to_symbol = dict(zip(DATE, hold_to_tomorrow_symbol_as_sig))
+        # 每个date 持有过夜的的stocks
+        hold_to_tomorrow_stocks = my_dict.merge_concat(hold_to_tomorrow_stocks, hold_to_tomorrow_date_to_symbol)
+        # print(hold_to_tomorrow_stocks)
+        
     capital = float(strategy['testParams']['capital'])
     # have to be in dict, since trading halt makes stocks' trading date vary
     rets = my_dict.div(rets, freq)
-    rets = list(sorted(list(rets.items()), key=lambda item: item[0]))
-    daily_returns = pd.Series(list(map(lambda tuple: tuple[1], rets))) * (1 - CAPITAL_AT_RISK[0])
-    capital_flow = (daily_returns + 1).cumprod()
+    rets = list(sorted(list(rets.items()), key=lambda item: item[0]))   # item[0] = datetime
+    daily_returns = pd.Series(
+        list(map(lambda tuple: tuple[1], rets))) * (1 - CAPITAL_AT_RISK[0])  # average daily return array
+    capital_flow = (daily_returns + 1).cumprod()        # cum return array
+    
+    
+    hold_to_tomorrow_stocks = list(sorted(list(hold_to_tomorrow_stocks.items()), key=lambda item: item[0]))
+    hold_to_tomorrow_stocks_array = list(map(lambda item: item[1], hold_to_tomorrow_stocks))
+    
     date = list(map(lambda tuple: tuple[0], rets))
     date = list(map(lambda d: str(d), list(date)))
     m = metrics(capital_flow)
-    capital_flow = capital_flow * capital  
+    capital_flow = capital_flow * capital
 
     res = {
         'date': date,
         'capitalFlow': list(capital_flow),
         'metrics': m,
+        'holdToTomorrow': hold_to_tomorrow_stocks_array,
+        'holdingFromYesterday': [[{'symbol': '600000', 'return': '0.01'}, {'symbol': '600000', 'return': '0.02'}]],
+        'netReturnToday': [0.01, 0.02], 
+        'openCommisionToday': [0.01, 0.01],
+        'closeCommissionToday': [0.01, 0.01],
+        'openSpreadCostToday': [0.01, 0.01],
+        'closeSpreadCostToday': [0.01, 0.01],
+        'additionalCoseOfDynamicPositionRebalance': [0.01, 0.01],
     }
     return res
 
-def get_holding_to_next_day_signals(open_signals, close_signals,): 
+def get_holding_to_next_day_signals(open_signals, close_signals,):
     '''
     return: Bool np.array
     True if holding the stock to next day, else False
@@ -117,31 +191,35 @@ def get_holding_to_next_day_signals(open_signals, close_signals,):
         在进行哪个sig里的更近的判断,
         再结合max_holding_days,进行最终判断
     '''
-    
-    close_signals=pd.Series(close_signals)
-    open_signals=pd.Series(open_signals)
+
+    close_signals = pd.Series(close_signals)
+    open_signals = pd.Series(open_signals)
     # 每个index的value设为获取最近的signal的index
-    index_of_nearest_close_signal = pd.Series(close_signals.index.where(close_signals)).ffill()
-    index_of_nearest_open_signal = pd.Series(open_signals.index.where(open_signals)).ffill()
+    index_of_nearest_close_signal = pd.Series(
+        close_signals.index.where(close_signals)).ffill()
+    index_of_nearest_open_signal = pd.Series(
+        open_signals.index.where(open_signals)).ffill()
     # print(index_of_nearest_open_signal.values)
     # print(index_of_nearest_close_signal.values)
-    # 如果最近的open_sig_index > close_sig_index, 
+    # 如果最近的open_sig_index > close_sig_index,
     #   或者open_sig_index不是nan 而close_sig_index为nan(还没出现过就是nan),那就是持有
     #   (可以把close_sig_index的nan替换为-1，就不用额外判断nan了)
-    holding_to_next_day_without_holding_day_limit = (index_of_nearest_open_signal > index_of_nearest_close_signal) | ((~index_of_nearest_open_signal.isna()) & index_of_nearest_close_signal.isna())
-    print('holding_to_next_day_without_holding_day_limit:', 
-          np.array(list(map(lambda v: 1 if v else 0, holding_to_next_day_without_holding_day_limit)), dtype=np.float64)
-          )
-    
+    holding_to_next_day_without_holding_day_limit = (index_of_nearest_open_signal > index_of_nearest_close_signal) | (
+        (~index_of_nearest_open_signal.isna()) & index_of_nearest_close_signal.isna())
+    # print('holding_to_next_day_without_holding_day_limit:',
+    #       np.array(list(map(lambda v: 1 if v else 0,
+    #                holding_to_next_day_without_holding_day_limit)), dtype=np.float64)
+    #       )
+
 # 到今天为止已经持有的天数, **注意,即使有NaN也不会阻断让cumsum()重置
     # 转换False 为 nan  (好像没必要,直接用 False判断也一样)
     holding_to_next_day_without_holding_day_limit.replace(False, np.nan)
     tmp = holding_to_next_day_without_holding_day_limit.replace(False, np.nan)
-    
-    # 这样如果index i是nan, 那么i的cumsum就会改变, 
+
+    # 这样如果index i是nan, 那么i的cumsum就会改变,
     # 非nan的连续数值的cumsum会相同(以及连续数值前面的一个nan的cumsum也会相同,不过不影响结果)
     group1 = tmp.isna().cumsum()
-    
+
     # 把同一个open_sig后面的分为一组，如果遇到新的open_sig重置holding_days，
     # 比如open_sig是[1, 1, 1], max_holding是1天，
     # **如果不重置，那么holding_days会变成[1, 2, 3]
@@ -149,20 +227,28 @@ def get_holding_to_next_day_signals(open_signals, close_signals,):
     # **group2开头可能有NaN,grouby(group2)有NaN部分会直接被删去，cumsum()结果会变成-1，
     #   但是后面filter只需要正数，负数不影响，所以不管了
     group2 = index_of_nearest_open_signal
-    
+
     # 把在group中具有相同cumsum的数值(tmp的index映射s的值)分入同一个group进行cumsum计算（这样nan会被分开算）
     #   跟Mysql一样，只要不Select group的字段，结果还是会把index全部分开
-    
+
     # 获得: 到今天为止已经持有的天数,
     # print(group1.values)
     # print(group2.values)
     # print(list(holding_to_next_day_without_holding_day_limit.groupby([group1,group2])))
-    holding_days = holding_to_next_day_without_holding_day_limit.groupby([group1,group2]).cumsum()
+    holding_days = holding_to_next_day_without_holding_day_limit.groupby(
+        [group1, group2]).cumsum()
     # print('holding_days:', holding_days.values)
     # 过滤掉持有时间大于limit的index, where会把不满足条件的都替换成NaN,不用担心原来的NaN
-    holding_to_next_day_with_holding_day_limit = holding_to_next_day_without_holding_day_limit.where(holding_days <= MAX_HOLDING_DAYS[0])
+    holding_to_next_day_with_holding_day_limit = holding_to_next_day_without_holding_day_limit.where(
+        holding_days <= MAX_HOLDING_DAYS[0])
     # print(holding_to_next_day_with_holding_day_limit)
     return holding_to_next_day_with_holding_day_limit.replace(np.nan, False).values
+
+def get_open_today(hold_from_yesterday):
+    return (~hold_from_yesterday) & REF(hold_from_yesterday, -1)
+
+def get_close_today(hold_to_tomorrow):
+    return (~hold_to_tomorrow) & REF(hold_to_tomorrow, 1)
 
 def returns(stock: Stock, open_signals, close_signals, holding_days):
     ''' **老方法:  错误！ 并且效率低！！！ 如果max_holding_day 很大,要循环很多次
@@ -177,14 +263,15 @@ def returns(stock: Stock, open_signals, close_signals, holding_days):
         # 第三次i=2循环就变成[0, 1, 1, 1, 1]了
         # 不能原地变,又原地利用！
     '''
-    
-    holding_to_next_day= get_holding_to_next_day_signals(open_signals, close_signals)
-    print('=========================')
-    print(open_signals)
-    print(close_signals)
-    print(holding_to_next_day)
+
+    holding_to_next_day = get_holding_to_next_day_signals(
+        open_signals, close_signals)
+    # print('=========================')
+    # print(open_signals)
+    # print(close_signals)
+    # print(holding_to_next_day)
     hold_from_yesterday = REF(holding_to_next_day, 1)  # 当天买入要从后一天开始算收益
-    print(hold_from_yesterday)
+    # print(hold_from_yesterday)
     # print('hold:', hold_from_yesterday)
 
 # buy_cost利用from yesterday向右看，sell_cost利用holding_to_next_day想左看
@@ -195,29 +282,31 @@ def returns(stock: Stock, open_signals, close_signals, holding_days):
                   (CLOSE * COMMISSION[0] + BID_ASK_SPREAD[0]) / CLOSE,
                   0
                   )
-    print('buy_cost', buy_cost)
+    # print('buy_cost', buy_cost)
     # 当天盘尾卖出的手续费 + spread, 总费率
     sell_cost = IF((~holding_to_next_day) & REF(holding_to_next_day, 1),  # 今天持股,明天没持股,说明今天卖了
                    (CLOSE * COMMISSION[0] + BID_ASK_SPREAD[0]) / CLOSE,
                    0
                    )
-    print('sell_cost', sell_cost)
+    # print('sell_cost', sell_cost)
     # 今天持股收益，利用hold_from向左看，因为hold_from第一个必为NaN
     holding_returns = IF(hold_from_yesterday,
                          (CLOSE - REF(CLOSE, 1)) / REF(CLOSE, 1),
                          0
                          )
-    print('holding_returns', holding_returns)
+    # print('holding_returns', holding_returns)
     # 今日净收益
     return_rates = holding_returns - sell_cost - buy_cost
     return_rates[np.isnan(return_rates)] = 0
     # 如果是short,取负
-    return_rates = -return_rates if POSITION_TYPE[0] == 'Short' else return_rates
+    return_rates = - \
+        return_rates if POSITION_TYPE[0] == 'Short' else return_rates
     # 累进收益率不应该在这算,要按总的平均算,这个只是一直股票的
     # returns = return_rates + 1
     # returns = returns.cumprod()
-    
+
     return return_rates
+
 
 def test_one_stock(stock: Stock, strategy: Dict):
     open_signals = signals(stock, strategy['openCriterionStr'])
@@ -225,6 +314,8 @@ def test_one_stock(stock: Stock, strategy: Dict):
     rets = returns(stock, open_signals, close_signals,
                    int(strategy['holdingDays']))
     return rets
+
+
 ''' 之前成功的
 # def returns(stock: Stock, open_signals, close_signals, holding_days):
 #     # close_signals NOT USED.  # take into account next SPRINT
@@ -246,6 +337,7 @@ def test_one_stock(stock: Stock, strategy: Dict):
 #     return rets
 '''
 
+
 def signals(stock: Stock, criterion: str):
     s = [0]
     code = 's[0]=' + criterion
@@ -254,24 +346,28 @@ def signals(stock: Stock, criterion: str):
     # print('signals', s[0])
     return s[0]
 
+
 if __name__ == '__main__':
 
     # get stocks dict
     stock_data_path = r'C:\Users\insect\Desktop\stock_data_test'
     stocks = get_all_stocks(stock_data_path)
     # print(returns(stocks[0], 1))
-    
+
     # close = pd.Series([1, 2, 3, 4, 5, 6, 7])
     # sig = pd.Series([True, True, False, False, False, True, False])
 
     # Test: get_holding_to_nest_day_signals
-    max_holding_days= 3
-    open=       [0,0,1,0,0,1,0,0,0,0,0,0,1,1,0,0,1,0,0,0,1,1,1,1,1]
-    close=      [0,0,1,0,1,0,0,0,0,0,1,0,1,0,1,0,0,0,1,1,0,0,0,0,0]
-    holding=    [0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,0,1,1,1,0,1,1,1,1,1]
+    max_holding_days = 3
+    open = [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+            1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1]
+    close = [0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0,
+             1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0]
+    holding = [0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0,
+               0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1]
     open = pd.Series(map(lambda v: v == 1, open))
     close = pd.Series(map(lambda v: v == 1, close))
     holding = pd.Series(map(lambda v: v == 1, holding)).values
-    
+
     # print(111, get_holding_to_next_day_signals(open, close))
     res = returns(stocks[0], open, close, 3)

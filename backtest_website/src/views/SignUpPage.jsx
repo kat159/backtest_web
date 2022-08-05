@@ -11,9 +11,9 @@ export default function SignUpPage() {
     const [usernameExist, setUsernameExist] = useState(false)
 
     const onFinish = async (values) => {
-        console.log('111Received values of form: ', values);
+        // console.log('111Received values of form: ', values);
         const res = await userService.signup(values);
-        console.log(res)
+        // console.log(res)
         const {message, err_code} = res.data
         if (err_code === 0) {
             goLogin();

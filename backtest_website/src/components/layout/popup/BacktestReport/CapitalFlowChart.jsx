@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useRef } from 'react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -9,7 +9,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Line, getElementAtEvent, } from 'react-chartjs-2';
 
 ChartJS.register(
     CategoryScale,
@@ -21,22 +21,10 @@ ChartJS.register(
     Legend
 );
 
-export const options = {
-    responsive: true,
-    plugins: {
-        legend: {
-            position: 'top',
-        },
-        title: {
-            display: true,
-            text: 'Capital Flow Chart',
-        },
-    },
-};
-
-
 export default function CapitalFlowChart(props) {
-    const { date, capitalFlow } = props
+    const chartRef = useRef();
+
+    const { date, capitalFlow, handleChartValueClick } = props
     const labels = date
     const data = {
         labels,
@@ -49,9 +37,41 @@ export default function CapitalFlowChart(props) {
             }
         ]
     }
+
+    // console.log('flow chart re redenr')
+
+    const options = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: 'Capital Flow Chart',
+            },
+        },
+        // fill: false,
+        interaction: {
+            intersect: false,        // true表示hover到point上才显示tooltips
+            mode: 'index'            // default mode='nearest'是鼠标离哪个point近显示哪个，而不是按照鼠标在哪个index显示哪个
+        },
+        radius: 0,                   // point半径
+        onClick: (event, element) => {      // element为intersect的point
+            if (element.length > 0) {
+                handleChartValueClick(element[0].index);
+            }
+        }
+    };
+
+
     return (
         <div>
-            <Line options={options} data={data} />;
+            <Line
+                ref={chartRef}
+                options={options}
+                data={data}
+            />
         </div>
     )
 }

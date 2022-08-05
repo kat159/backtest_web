@@ -299,7 +299,8 @@ class CriterionItemService {
                 leadingText: 'ROUND',
                 paramTypes: [this._INTEGER_OR_NUMBER],
                 joinChar: ', ',
-                returnType: this.INTEGER_STR
+                returnType: this.INTEGER_STR,
+                translate: ['the nearest integer of', 0]
             },
             'Count': {
                 name: 'Count',
@@ -309,7 +310,8 @@ class CriterionItemService {
                 leadingText: 'COUNT',
                 paramTypes: [this.BOOL_STR, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: this.INTEGER_STR
+                returnType: this.INTEGER_STR,
+                translate: ['the number of periods when', 0, 'is true in', 1, 'periods']
             },
             'Sum In N Periods': {
                 name: 'Sum In N Periods',
@@ -319,7 +321,8 @@ class CriterionItemService {
                 leadingText: 'SUM',
                 paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: 0
+                returnType: 0,
+                translate: ['the accumulated sum of', 0, 'in', 1, 'periods'],
             },
             'Highest Value in N Periods': {
                 name: 'Highest Value in N Periods',
@@ -329,7 +332,8 @@ class CriterionItemService {
                 leadingText: 'HHV',
                 paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: 0
+                returnType: 0,
+                translate: ['the highest value of', 0, 'in', 1, 'periods'],
             },
             'Lowest Value in N Periods': {
                 name: 'Lowest Value in N Periods',
@@ -339,7 +343,8 @@ class CriterionItemService {
                 leadingText: 'LLV',
                 paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: 0
+                returnType: 0,
+                translate: ['the Lowest value of', 0, 'in', 1, 'periods'],
             },
             'Standard Deviation': {
                 name: 'Standard Deviation',
@@ -349,7 +354,8 @@ class CriterionItemService {
                 leadingText: 'STD',
                 paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: this.NUMBER_STR
+                returnType: this.NUMBER_STR,
+                translate: ['the standard deviation of', 0, 'in', 1, 'periods'],
             },
             'Average Standard Deviation': {
                 name: 'Average Standard Deviation',
@@ -359,7 +365,8 @@ class CriterionItemService {
                 leadingText: 'AVEDEV',
                 paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: this.NUMBER_STR
+                returnType: this.NUMBER_STR,
+                translate: ['the average of the absolute deviations of', 0, 'from their mean in', 1, 'periods'],
             },
             'Linear Regression Slope': {
                 name: 'Linear Regression Slope',
@@ -370,7 +377,8 @@ class CriterionItemService {
                 leadingText: 'SLOPE',
                 paramTypes: [this._INTEGER_OR_NUMBER, this._INTEGER_OR_EXACT_NUMBER],
                 joinChar: ', ',
-                returnType: this.NUMBER_STR
+                returnType: this.NUMBER_STR,
+                translate: ['the slope of linear regression of', 0, 'in', 1, 'periods'],
             },
             // Pattern 
             'Cross Above': {

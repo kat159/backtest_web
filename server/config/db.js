@@ -6,7 +6,7 @@ connection.connect(err => {
     if (err) {
         console.log('connection to database failed');
     }
-    console.log('succesfully connect to database');
+    console.log('succesfully connect to database(db connection initialize)');
 })
 
 module.exports = {
@@ -16,7 +16,7 @@ module.exports = {
                 if (err) {
                     console.log('Database Operation Failed: ', sql);
                     reject(err);
-                }
+                } 
                 resolve({
                     results, 
                     fields

@@ -48,7 +48,6 @@ export default function BacktestLogTable() {
     });
 
     const fetchData = (params = {}) => {
-        console.log(params)
         setLoading(true);
         fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
             .then((res) => res.json())

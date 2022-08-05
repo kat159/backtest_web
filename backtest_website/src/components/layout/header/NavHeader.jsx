@@ -37,7 +37,7 @@ export default function NavHeader() {
     }, [location]);
 
     const onClick = (e) => {
-        console.log('click ', e);
+        // console.log('click ', e);
         setCurrent(e.key);
         nav(e.key, { replace: true });
     };

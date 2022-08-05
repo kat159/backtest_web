@@ -46,6 +46,17 @@ export default function BacktestParams(props) {
                     {
                         required: true,
                     },
+                    {
+                        message: 'Must Be Integer',
+                        validator: (_, value) => {
+                            value = value.toString();
+                            if (value.indexOf('.') === -1) {
+                                return Promise.resolve();
+                            } else {
+                                return Promise.reject('');
+                            }
+                        }
+                    }
                 ]}
             >
                 <Input type={'number'} />
@@ -64,6 +75,17 @@ export default function BacktestParams(props) {
                     {
                         required: true,
                     },
+                    {
+                        message: 'Number from 0 to 100',
+                        validator: (_, value) => {
+                            value = value.toString();
+                            if (parseFloat(value) > 100 || parseFloat(value) < 0) {
+                                return Promise.reject('');
+                            } else {
+                                return Promise.resolve();
+                            }
+                        }
+                    }
                 ]}
             >
                 <Input type={'number'} />
@@ -73,6 +95,17 @@ export default function BacktestParams(props) {
                     {
                         required: true,
                     },
+                    {
+                        message: 'Number from 0 to 100',
+                        validator: (_, value) => {
+                            value = value.toString();
+                            if (parseFloat(value) > 100 || parseFloat(value) < 0) {
+                                return Promise.reject('');
+                            } else {
+                                return Promise.resolve();
+                            }
+                        }
+                    }
                 ]}
             >
                 <Input type={'number'} />

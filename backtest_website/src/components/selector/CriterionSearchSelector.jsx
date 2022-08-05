@@ -54,7 +54,7 @@ export default function CriterionSearchSelector(props) {
     };
 
     const handleChange = (newValue) => { // 输入框改变不会触发，点击选择才会触发
-        console.log(newValue)
+        // console.log(newValue)
         handleSelect(newValue)
         setValue(newValue);             // antd Form的value不会随这个value改变，只能通过useForm().setFieldsValue改变
     };

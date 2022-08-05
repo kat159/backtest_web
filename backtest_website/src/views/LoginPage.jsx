@@ -12,9 +12,9 @@ export default function LoginPage() {
     const nav = useNavigate();
 
     const onFinish = async (values) => {
-        console.log('Received values of form: ', values);
+        // console.log('Received values of form: ', values);
         const res = await userService.login(values);
-        console.log(res.data);
+        // console.log(res.data);
         const {message, err_code, user_id, username} = res.data;
         if (message === 'incorrect password') {
             setCorrectPassword(false);
@@ -34,7 +34,7 @@ export default function LoginPage() {
     };
     
     const goSignUp = () => {
-        console.log('go sign up page')
+        // console.log('go sign up page')
         nav('/signup', {replace: true});
     }   
 

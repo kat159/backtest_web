@@ -88,20 +88,34 @@ export default function CriterionBuilder(
         }
         if (tempItem === undefined) console.error('temp item id not found in CriterionBuilder')
         else {
-            return <span
-                key={nanoid()}
-                onMouseOver={onMouseOver}
-                onMouseOut={onMouseOut}
-                onClick={onClick}
+            returnComponent = <span>
+                <span
+                    key={nanoid()}
+                    onMouseOver={onMouseOver}
+                    onMouseOut={onMouseOut}
+                    onClick={onClick}
 
-                style={
-                    {
-                        cursor: 'pointer',
-                        ...selectionStyle
-                    }
-                }>{tempItem.name}
+                    style={
+                        {
+                            cursor: 'pointer',
+                            ...selectionStyle
+                        }
+                    }>{tempItem.name}
+                </span>
+                {
+                    curSelectedRoute === curRoute &&
+                    <CloseOutlined className='my-action-tag'
+                        style={{
+                            fontSize: '10px'
+                        }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDeleteClick(e);
+                        }}
+                    />
+                }
             </span>
-
         }
 
     } else if (isTextInput) {   // Exact Number Input
@@ -212,11 +226,13 @@ export default function CriterionBuilder(
             </span>
             {
                 curSelectedRoute === curRoute &&
-                <CloseOutlined id={'anticon-close' + key} className='my-action-tag'
+                <CloseOutlined className='my-action-tag'
                     style={{
                         fontSize: '10px'
                     }}
                     onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         handleDeleteClick(e);
                     }}
                 />

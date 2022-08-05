@@ -12,7 +12,7 @@ export default function StrategeyBuilder(props) {
   const {formRef, form, initialValues} = props;
 
   const showInput = () => {
-    console.log(form.getFieldsValue());
+    // console.log(form.getFieldsValue());
   }
 
   return (

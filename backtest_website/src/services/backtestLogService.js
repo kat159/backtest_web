@@ -11,7 +11,7 @@ class BacktestLogService {
         const curDate = moment().format();
         const strategy = await strategyService.getById(strategyId)
         const strategyName = strategy.data.results[0].name
-        console.log(1111111, strategy)
+        // console.log(1111111, strategy)
         const body = {
             user_id : userId,
             date: curDate,

@@ -22,6 +22,10 @@ export default function CriteriaBuilder(props) {
     const alertMessageRef = useRef(null)
     const excludeClickOutsideRefs = [selectorTableRef, criterionBuilderRef, finishButtonRef, saveTempCriterionButtonRef, temporaryCriterionTagsRef]
     const handleClickOutside = event => {
+        // console.log('Inner')
+        event.stopPropagation()
+
+
         let isClickingOutside = true;
         for (const ref of excludeClickOutsideRefs) {
             if (!ref.current || ref.current.contains(event.target)) {
@@ -32,6 +36,7 @@ export default function CriteriaBuilder(props) {
         if (isClickingOutside) {
             setCurRouteOfSelectedBuildingCriterion('');
             setSelectedBuildingCriterionStatus('edit');
+            setBuildingCriterionWarningMsg(undefined);
         }
     };
     useEffect(() => {
@@ -53,7 +58,7 @@ export default function CriteriaBuilder(props) {
     //[['Cross Above', ['Plus', ['Opening Price'], ['Highest Price']], ['Closing Price']]]
     const [curRouteOfSelectedBuildingCriterion, setCurRouteOfSelectedBuildingCriterion] = useState('0')
     const [selectedBuildingCriterionStatus, setSelectedBuildingCriterionStatus] = useState('edit');
-    const [buildingCriterionWarningMsg, setBuildingCriterionWarningMsg] = useState('');
+    const [buildingCriterionWarningMsg, setBuildingCriterionWarningMsg] = useState(undefined);
     const [criterionNameExists, setCriterionNameExists] = useState(false)
 
     // [{id, name, criterionStr, nestedCriterion, itemUsedCounter:{var1: 1, var2: 3} }], no dummy bracket
@@ -113,7 +118,7 @@ export default function CriteriaBuilder(props) {
     }
     const handleCancelEditingCriterion = () => {
         setCurRouteOfSelectedBuildingCriterion('0');
-        setBuildingCriterionWarningMsg('');
+        setBuildingCriterionWarningMsg(undefined);
         setNestedBuildingCriterion([[]]);
         setEditingCriterionId(undefined);
         setSelectedBuildingCriterionStatus('edit');
@@ -136,6 +141,7 @@ export default function CriteriaBuilder(props) {
             console.error('itemId not found in [handleCriterionEditClick]');
         }
         setSelectedBuildingCriterionStatus('edit');
+        setBuildingCriterionWarningMsg(undefined);
         setCurRouteOfSelectedBuildingCriterion('0');
         setNestedBuildingCriterion(newBuildingCriterion);
     }
@@ -158,32 +164,56 @@ export default function CriteriaBuilder(props) {
             console.error('itemId not found in [handleFinishEditing]');
         }
     }
-    const validateTemporaryCriterionName = (itemList) => {         // return true if no err, else return false and set warning
-        const counter = {}
-        for (const item of itemList) {
-            const { name, id } = item
-            if (!name || name.length === 0) {
+    const validateTemporaryCriterionName = (itemList, checkItemName = undefined, checkItemId = undefined) => {         // return true if no err, else return false and set warning
+        if (checkItemName !== undefined && checkItemId !== undefined) {
+            if (!checkItemName || checkItemName.length === 0) {
                 setTemporaryCriterionNameError({
-                    id: id,
+                    id: checkItemId,
                     error: 'Item name can not be empty.'
                 })
-                document.getElementById(id).focus()
+                // document.getElementById(id).focus()
                 return false
             }
-            counter[name] = counter[name] ? counter[name] + 1 : 1
-            if (counter[name] > 1) {
-                setTemporaryCriterionNameError({
-                    id: id,
-                    error: 'Item name exists.'
-                })
-                document.getElementById(id).focus()
-                return false
+            for (const item of itemList) {
+                const { name, id } = item
+                if (name === checkItemName && id !== checkItemId) {
+                    setTemporaryCriterionNameError({
+                        id: checkItemId,
+                        error: 'Item name exists.'
+                    })
+                    // document.getElementById(id).focus()
+                    return false
+                }
+            }
+        } else {                                    // 没有给定checkItem
+            const counter = {}
+            for (const item of itemList) {
+                const { name, id } = item
+                if (!name || name.length === 0) {
+                    setTemporaryCriterionNameError({
+                        id: id,
+                        error: 'Item name can not be empty.'
+                    })
+                    // document.getElementById(id).focus()
+                    return false
+                }
+                counter[name] = counter[name] ? counter[name] + 1 : 1
+                if (counter[name] > 1) {
+                    setTemporaryCriterionNameError({
+                        id: id,
+                        error: 'Item name exists.'
+                    })
+                    // document.getElementById(id).focus()
+                    return false
+                }
             }
         }
+        // valid
         setTemporaryCriterionNameError(undefined)
         return true
     }
     const onTemporaryCriterionNameInputBlur = (item) => {           // 保存temp item new name
+        // console.log(temporaryCriterionNameError)
         const { name, id } = item
         const newData = temporaryCriterionList.map(item => {        // 改变自身name
             if (item.id === id) {
@@ -192,7 +222,7 @@ export default function CriteriaBuilder(props) {
             return { ...item }
         })
         setTemporaryCriterionList(newData)
-        validateTemporaryCriterionName(newData) // 不要用state的数据，setState是异步，可能还没有set完成
+        validateTemporaryCriterionName(newData, name, id) // 不要用state的数据，setState是异步，可能还没有set完成
     }
     const onTemporaryCriterionClick = (itemId) => {    // insert into building criterion
         if (curRouteOfSelectedBuildingCriterion === '') {   // 未选中要替换的
@@ -239,7 +269,8 @@ export default function CriteriaBuilder(props) {
                 return index !== 0 ? removeFromNestedCriterion(itemId, value) : value
             })
         }
-        const newBuildingCriterionList = removeFromNestedCriterion(itemId, nestedBuilidingCriterion[0]);    //从buildingCriterion中删掉
+        //从buildingCriterion中删掉
+        const newBuildingCriterionList = removeFromNestedCriterion(itemId, nestedBuilidingCriterion[0]);    
 
         const newData = temporaryCriterionList.filter(temporaryCriterion => {       // 删掉这个item
             return temporaryCriterion.id !== itemId;
@@ -250,9 +281,13 @@ export default function CriteriaBuilder(props) {
             const newItem = { ...tempItem, nestedCriterion: removeFromNestedCriterion(itemId, tempItem.nestedCriterion) }
             newTemporaryCriterionList.push(newItem)
         }
+
+        const newFinalCriterion = removeFromNestedCriterion(itemId, finalNestedCriterion);
+
         if (itemId === editingCriterionId) {
             setEditingCriterionId(undefined);
         }
+        setFinalNestedCriterion(newFinalCriterion);
         setNestedBuildingCriterion([newBuildingCriterionList]);
         setTemporaryCriterionList(newTemporaryCriterionList);
     }
@@ -299,6 +334,8 @@ export default function CriteriaBuilder(props) {
                 return curNestedCriterion[0]
             }
             if (isTemporaryCriterion(curNestedCriterion[0])) {  // temp item id
+                // console.log('id:', curNestedCriterion[0])
+                // console.log(temporaryCriterionList)
                 const tempItem = getTemporaryCriterionById(curNestedCriterion[0])
                 if (expandTempItem) {
                     return helper(tempItem.nestedCriterion)
@@ -598,14 +635,34 @@ export default function CriteriaBuilder(props) {
         return res
     }
     const handleFinishClick = async () => {                 // check , then save or add
-        if (!validateCriterionParamType([finalNestedCriterion], finalCriterionId, 'Bool')) {
-            return
-        }
-        let checkRes = checkEmpty([finalNestedCriterion]);
+        // if (!validateCriterionParamType([finalNestedCriterion], finalCriterionId, 'Bool')) {
+        //     return
+        // }
+
+        // let checkRes = checkEmpty([finalNestedCriterion]);
+        // if (checkRes.status === 'Error') {
+        //     wanrInvalidCriterion(checkRes)
+        //     return;
+        // }
+
+        let checkRes = checkParamType([finalNestedCriterion], finalCriterionId, 'Bool');
         if (checkRes.status === 'Error') {
-            wanrInvalidCriterion(checkRes)
+            setBuildingCriterionWarningMsg({
+                message: checkRes.error + ' found in Final Criterion',
+                description: checkRes.errorDetail
+            });
             return;
         }
+        checkRes = checkEmpty([finalNestedCriterion]);
+        // console.log(checkRes)
+        if (checkRes.status === 'Error') {
+            setBuildingCriterionWarningMsg({
+                message: checkRes.error + ' found in Final Criterion',
+                description: checkRes.errorDetail
+            });
+            return;
+        }
+
         const criterionStr = stringfyCriterion(finalNestedCriterion);
         if (criterionBeingEdited) { // editing
             console.log('Editing Criterion Click...', criterionBeingEdited)
@@ -779,6 +836,7 @@ export default function CriteriaBuilder(props) {
             const { route, } = data
             setCurRouteOfSelectedBuildingCriterion(route);
             setSelectedBuildingCriterionStatus('edit');
+            setBuildingCriterionWarningMsg(undefined);
         })
         return () => {
             PubSub.unsubscribe(token1);
@@ -883,17 +941,7 @@ export default function CriteriaBuilder(props) {
                                 )
                                 <b> : </b>
                                 <Space>
-                                    {editingCriterionId &&
-                                        <Button onClick={(e) => {
-                                            e.currentTarget.blur()
-                                            handleFinishEditingCriterion()
-                                        }} 
 
-                                        >Finish</Button>
-                                    }
-                                    {editingCriterionId &&
-                                        <button onClick={handleCancelEditingCriterion}>Cancel</button>
-                                    }
                                 </Space>
                             </div>
                             <div style={{ marginTop: '1px', marginBottom: '10px' }} ref={criterionBuilderRef} >
@@ -909,11 +957,60 @@ export default function CriteriaBuilder(props) {
                                     handleClearSelected,
                                 )}
                             </div>
-                            
+
                             <span ref={saveTempCriterionButtonRef}>
-                                <button onClick={handleSaveToTemporaryCriterion} type='button'>Save as new variable</button>
-                                {/* <button onClick={handleClearSelected} type='button'>Clear</button> */}
-                                <button onClick={handleSaveToFinalCriterion} type='button'>Save as final criterion</button>
+                                <Space>
+                                    {editingCriterionId &&
+                                        <Button className='criterion-builder-button'
+                                            type='button'
+                                            onClick={(e) => {
+                                                e.currentTarget.blur()
+                                                handleFinishEditingCriterion()
+                                            }}
+                                            style={{
+                                                padding: '1px 5px 1px 5px',
+                                                height: '30px'
+                                            }}
+
+                                        >Finish</Button>
+                                    }
+                                    {editingCriterionId &&
+                                        <Button className='criterion-builder-button'
+                                            type='button'
+                                            onClick={(e) => {
+                                                e.currentTarget.blur()
+                                                handleCancelEditingCriterion()
+                                            }}
+                                            style={{
+                                                padding: '1px 5px 1px 5px',
+                                                height: '30px'
+                                            }}
+                                        >Cancel</Button>
+                                    }
+                                    <Button onClick={(e) => {
+                                        e.currentTarget.blur()
+                                        handleSaveToTemporaryCriterion()
+                                    }}
+                                        type='button'
+                                        className='criterion-builder-button'
+                                        style={{
+                                            padding: '1px 5px 1px 5px',
+                                            height: '30px'
+                                        }}
+                                    >Save as new variable</Button>
+                                    {/* <button onClick={handleClearSelected} type='button'>Clear</button> */}
+                                    <Button onClick={(e) => {
+                                        e.currentTarget.blur()
+                                        handleSaveToFinalCriterion()
+                                    }}
+                                        type='button'
+                                        className='criterion-builder-button'
+                                        style={{
+                                            padding: '1px 5px 1px 5px',
+                                            height: '30px'
+                                        }}
+                                    >Save as final criterion</Button>
+                                </Space>
                                 {/* <button onClick={() => { validateCriterionParamType(nestedBuilidingCriterion, editingCriterionId) }} type='button'>Validate</button> */}
                                 <div >
                                     <input checked={toolTips} style={{ cursor: 'pointer' }} onChange={() => { setToolTips(!toolTips); console.log(toolTips) }} type="checkbox" />
@@ -976,11 +1073,24 @@ export default function CriteriaBuilder(props) {
                             </div>
                         </div>
                         <div ref={alertMessageRef}>
-                            {selectedBuildingCriterionStatus === 'warning' && <Alert {...buildingCriterionWarningMsg} type="error" />}
+                            {buildingCriterionWarningMsg && <Alert {...buildingCriterionWarningMsg} type="error" />}
                         </div>
 
                     </div>
-                    <button style={{ position: 'absolute', right: '10%', bottom: '10%' }} onClick={handleFinishClick} ref={finishButtonRef} type='button'>Finish</button>
+                    <Space size={'large'} style={{ position: 'absolute', right: '3%', bottom: '10%' }}>
+                        <Button
+                            onClick={e => {
+                                e.currentTarget.blur()
+                                handleFinishClick()
+                            }}
+                            ref={finishButtonRef}
+                            className='criterion-builder-button'
+                            type='button'
+                        >Finish</Button>
+                        <Button onClick={handleForceClosingClick} type='button' className='criterion-builder-button'
+                        >Cancel</Button>
+                    </Space>
+
                 </div>
             </Draggable>
         </div>

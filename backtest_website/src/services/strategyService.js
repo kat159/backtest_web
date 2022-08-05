@@ -95,7 +95,7 @@ class StrategyService {
     }
 
     async updateStrategy(strategyId, strategy) {
-        console.log('11111111', strategyId);
+        // console.log('11111111', strategyId);
         const data = this.toBackendFormat(strategy);
         return axios({
             method: 'put',

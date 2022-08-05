@@ -8,7 +8,7 @@ class Stock:
     def __init__(self, path: str) -> None:
         self.symbol = ''
         self.name = ''
-        self.time_frame = ''
+        self.time_period = ''
         self.split_adjust = ''
         self.date = []
         self.open = []
@@ -17,12 +17,14 @@ class Stock:
         self.low = []
         self.volume = []
         self.turn_volume = []
+        self.timestamp = []
+        self.date_to_close = {}
         # TODO: try catch
         f = open(path)
         l = f.readline()
         title = re.split('\s', l.strip())
         
-        self.symbol, self.name, self.time_frame, self.split_adjust \
+        self.symbol, self.name, self.time_period, self.split_adjust \
                 = title[0], ''.join(title[1:len(title)-2]), title[-2], title[-1]
         f.readline()
         while 1:
@@ -32,6 +34,7 @@ class Stock:
             data = re.split('\s', l.strip())
             if len(data) < 7:
                 break
+            self.timestamp.append(datetime.strptime(data[0], '%Y/%m/%d').timestamp())
             self.date.append(to_date(data[0], '%Y/%m/%d'))
             self.open.append(float(data[1]))
             self.high.append(float(data[2]))
@@ -46,6 +49,8 @@ class Stock:
         self.volume = pd.Series(self.volume)
         self.turn_volume = pd.Series(self.turn_volume)
         self.date = pd.Series(self.date)
+        self.timestamp = pd.Series(self.timestamp)
+        self.date_to_close = dict(zip(self.date, self.close))
         f.close()
         
 def get_all_stocks(path: str):
@@ -55,8 +60,8 @@ def get_all_stocks(path: str):
     for file in files:
         stock = Stock(path + '\\' + file)
         d[stock.symbol] = stock
-        
     return d
+
 
 if __name__ == '__main__':
     stock = Stock(r'C:\Users\insect\Desktop\股票数据\SH#600000.txt')

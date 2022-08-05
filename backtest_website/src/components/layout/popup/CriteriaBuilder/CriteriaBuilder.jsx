@@ -192,7 +192,7 @@ export default function CriteriaBuilder(props) {
     })
     
     const handleNameInputKeyUp = (e) => {
-        console.log(e.target.value)
+        // console.log(e.target.value)
         setCriterionNameExists(false);
     }
 

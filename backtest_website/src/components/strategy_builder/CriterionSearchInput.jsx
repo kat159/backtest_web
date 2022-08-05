@@ -43,10 +43,19 @@ export default function CriterionSearchInput(props) {
         );
     };
 
+    const [testtext, setTesttext] = useState('')
+
     let timeout;
     let currentValue;
     const fetch = (value, callback) => {
-        if (timeout) {
+        // setTesttext(nanoid())
+        // console.log('curval', currentValue); 
+        // console.log('timeout', timeout)
+
+        // 利用React在这个component中任何State改变的时候，都会把外部定义的非State参数重置
+        //   ** 注意一旦fetch期间有其他state改变，这个timeout就会变成null，就**失去作用了
+        //     把上面的setTesttext，即使testext没被任何地方用到，也会重置外面的参数，
+        if (timeout) {                  
             clearTimeout(timeout);
             timeout = null;
         }
@@ -79,7 +88,7 @@ export default function CriterionSearchInput(props) {
 
     const [data, setData] = useState([]); // 搜索出来的选项
     const [value, setValue] = useState(); // 点击选择的内容，不是输入框的内容
-    
+
     useEffect(()=>{
         fetch('', setData);
     }, [])
@@ -89,7 +98,7 @@ export default function CriterionSearchInput(props) {
     };
 
     const handleChange = (newValue) => { // 输入框改变不会触发，点击选择才会触发
-        console.log(newValue)
+        // console.log(newValue)
         setValue(newValue);             // antd Form的value不会随这个value改变，只能通过useForm().setFieldsValue改变
     };
     const [criterionEditing, setCriterionEditing] = useState(undefined);
@@ -128,6 +137,7 @@ export default function CriterionSearchInput(props) {
     return (
         <div>
             {criterionEditing && <CriteriaBuilder onForceCloseCallback={onForceCloseCallback} criterionBeingEdited={criterionEditing} onFinishCallback={onEditFinishCallback} />}
+
             <Form.Item label='Selected Criterion' name={props.name}
                 
                 className='criteria-selector'

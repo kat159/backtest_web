@@ -10,6 +10,7 @@ import criterionService from '../../../../services/criterionService'
 import strategyService from '../../../../services/strategyService'
 import StrategeyBuilder from '../../../strategy_builder/StrategeyBuilder'
 import BacktestReport from '../../popup/BacktestReport/BacktestReport'
+import DraggablePoppup from '../../popup/DraggablePoppup'
 import StrategySearchSelector from './StrategySearchSelector'
 
 export default function Backtest() {
@@ -79,10 +80,15 @@ export default function Backtest() {
     return data
   }
   const handleRunTest = async () => {
-    const values = await form.validateFields()
-    setDisplayingReport(true)
-    const res = await backtestService.runTestWithFormData(values);
-    setTestReport({...res.data, strategy: values})
+    try {
+      const values = await form.validateFields()
+      setDisplayingReport(true)
+      const res = await backtestService.runTestWithFormData(values);
+      setTestReport({...res.data, strategy: values})
+    } catch(err) {
+
+    }
+    
   }
 
   const handleReset = (e) => {
@@ -119,7 +125,23 @@ export default function Backtest() {
           <Button type='dashed' >Use Existing Strategy</Button>
         </Popconfirm>
       </Space>
-      {testReport && <BacktestReport strategy={form.getFieldsValue(true)} strategyId={curStrategyId} testReport={testReport} setTestReport={setTestReport} setDisplayingReport={setDisplayingReport} visible={displayingReport} />}
+      {
+      testReport && 
+      <DraggablePoppup
+        handleForceClosingClick={()=>{setTestReport(undefined)}}
+        title='Test Report'
+        content={
+          <BacktestReport 
+            strategy={form.getFieldsValue(true)} 
+            strategyId={curStrategyId} 
+            testReport={testReport} 
+            setTestReport={setTestReport} 
+            setDisplayingReport={setDisplayingReport} 
+            visible={displayingReport} 
+          />
+        }
+      />
+      }
       <StrategeyBuilder formRef={formRef} form={form} />
       <Space className='button-group-bottem' size={'large'} >
         <Button type='link' onClick={handleReset}>Reset</Button>

@@ -15,5 +15,3 @@ if __name__ == '__main__':
     format = '%Y-%m-%d'
     t1 = to_date(d1, format)
     t2 = to_date(d2, format)
-    print([str(t1)])
-    print(next_day(t1))
