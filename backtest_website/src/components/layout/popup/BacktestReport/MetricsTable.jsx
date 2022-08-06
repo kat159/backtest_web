@@ -1,7 +1,7 @@
 import { Table } from 'antd';
 import React from 'react';
 import CapitalFlowChart from './CapitalFlowChart';
-import {nanoid} from 'nanoid'
+import { nanoid } from 'nanoid'
 
 
 export default function MetricsTable(props) {
@@ -27,8 +27,8 @@ export default function MetricsTable(props) {
     const convertCamelToName = (camelCaseName) => {
         // **!!Not working in some brower like IE
         return camelCaseName
-        .replace(/([A-Z])/g, ' $1')  // insert a space before all caps
-        .replace(/^./, str => str.toUpperCase());     // uppercase the first char
+            .replace(/([A-Z])/g, ' $1')  // insert a space before all caps
+            .replace(/^./, str => str.toUpperCase());     // uppercase the first char
     }
 
     const columns = Object.keys(metrics).map(metricName => {
@@ -37,10 +37,15 @@ export default function MetricsTable(props) {
             dataIndex: metricName
         }
     })
-    const data = [{...metrics, key:nanoid()}]
+    const data = [{ ...metrics, key: nanoid() }]
     return (
         <div>
-            <Table columns={columns} dataSource={data} size="small" pagination={false} />
+            <Table className='custom-antd-table-small'
+                columns={columns}
+                dataSource={data}
+                size="small"
+                pagination={false}
+            />
         </div>
     )
 }

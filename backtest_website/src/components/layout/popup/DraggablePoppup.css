@@ -12,11 +12,28 @@
     padding: 1px;
 }
 
-
 .draggable-poppup-handle {
-    width: 100% ;
-    height: 23px ;
-    display: block ;
-    background-color: #4d4d4d ;
-    color: white ;
+    width: 100%;
+    height: 23px;
+    display: block;
+    background-color: #4d4d4d;
+    color: white;
 }
+
+.risizable-draggable-poppup-outer {
+    background-color: rgb(253, 251, 247);
+    border: 1px solid black;
+}
+
+.risizable-draggable-poppup-handle {
+    width: 100%;
+    height: 23px;
+    display: block;
+    background-color: #4d4d4d;
+    color: white;
+    cursor: default;
+}
+
+canvas{
+    
+ }

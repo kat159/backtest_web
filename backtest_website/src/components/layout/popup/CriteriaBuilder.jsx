@@ -916,7 +916,7 @@ export default function CriteriaBuilder(props) {
                             />
                         </Space>
 
-                        <div><b>Final Criterion:</b></div>
+                        <div><span style={{color: 'red'}}>* </span><b>Final Criterion:</b></div>
                         <div>
                             {stringfyCriterion(finalNestedCriterion)}
                             <EditOutlined className='my-action-tag'

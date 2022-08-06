@@ -31,17 +31,43 @@ async function getVariablesData(stockSymbol, indicators) {
     return variablesData
 }
 
+function getStockTrackingData(symbol, trackChartSetting, dailyTestReport) {
+    if (!trackChartSetting) {
+        return {}
+    }
+    const date_to_data = {}
+    // console.log(trackChartSetting, dailyTestReport)
+    for (const curDayReport of dailyTestReport) {
+        const positions = curDayReport.cur_position_detail
+        const date = curDayReport.date
+        for (const position of positions) {
+            if (position.symbol === symbol) {
+                date_to_data[date] = {
+                    holdingAmount: position.market_value,
+                    netAccumReturn: position.net_accum_return
+                }
+                break
+            }
+        }
+    }
+    // console.log(date_to_data)
+    return date_to_data
+}
+
 export async function getData(data) {
-    const {stockSymbol, indicators, } = data
+    const {stockSymbol, indicators, trackChartSetting, dailyTestReport} = data
     const stockData = await stockService.getBySymbols([stockSymbol]);
 
     // **TODO：variablesData 交给stock chart之前就fetch好，每次外部某个indicator参数改变，
     // 只重新fetch参数改变的那个indicator，不然indicators参数一改，stockChart就要重新全部fetch
     const variablesData = await getVariablesData(stockSymbol, indicators);
 
+    const stockTrackingData = getStockTrackingData(stockSymbol, trackChartSetting, dailyTestReport)
+
     const stock = stockData.data.data[0]
     const res = []
     for (let i = 0; i < stock.close.length; i++) {
+        const curDate = moment(stock.timestamp[i] * 1000).format('YYYY-MM-DD')
         const d = {
             date: parseDate(moment(stock.timestamp[i] * 1000).format('YYYY-MM-DD')),
             open: stock.open[i],
@@ -57,8 +83,10 @@ export async function getData(data) {
         for (const formula in variablesData) {
             d[formula] = variablesData[formula][i]
         }
+        const trackData = stockTrackingData[curDate]
+        d.holdingAmount = trackData ? (trackData.holdingAmount ?? '') : ''
+        d.netAccumReturn = trackData ? (trackData.netAccumReturn ?? '') : ''
         res.push(d)
-
     }
     // console.log(res)
   	return new Promise((resolve, reject) => {

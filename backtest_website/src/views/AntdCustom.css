@@ -1,0 +1,9 @@
+/* 有必须有空格才能包含，否则是多选 */
+.custom-antd-table-small .ant-table-small {
+    line-height: 0.8 !important;
+    font-size: 12px !important;
+}
+.custom-antd-table-small-10 .ant-table-small {
+    line-height: 0.8 !important;
+    font-size: 11px !important;
+}

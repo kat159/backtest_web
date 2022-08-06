@@ -1,3 +1,4 @@
+from distutils.log import error
 from mimetypes import init
 from re import M
 from typing import *
@@ -59,6 +60,7 @@ class IntegratedTester:
             
             open_today = single_tester.get_open_signals()
             close_today = single_tester.get_close_signals()
+            # open_today = open_today & (~close_today)        # 小心 python boolen false取反不是true
             
         # 该股票每个index当天的open sig（已考虑持有情况, 必然发生在不持有时)
             # 以时间序列进行多个股票累计
@@ -93,7 +95,7 @@ class IntegratedTester:
         m = metrics(pd.Series(capital_flow))
         res = {
             'date': list(map(lambda d: str(d), date)),
-            'capitalFlow': capital_flow,
+            'capitalFlow': [round(d, 2) for d in capital_flow],
             'metrics': m,
             'daily_test_report': daily_test_report
         }
@@ -149,6 +151,38 @@ class IntegratedTester:
                 return position_change
                 # **position_change[close_symbole] = -10 表示平仓10手，
         
+        def handle_close(cur_date, symbol, reason, position_change_report_today, hands=None):
+            if symbol not in cur_holdings:
+                return 0
+            if hands == None:
+                hands = cur_holdings[symbol]
+            if cur_holdings[symbol] < 0:
+                error('Error: holding < 0')
+            
+            price = get_price(symbol, cur_date) + close_spread
+            amount = price * hands
+            commission = amount * self.strategy.commission
+
+            position_change_report_today.append(
+                {
+                    'symbol': symbol,
+                    'type': 'close',
+                    'bid_price': price,
+                    'hands': hands,
+                    'amount': round(amount, 2),
+                    'commission': round(commission, 2),
+                    'reason': reason  # 'signal' / 'rebalance'
+                }
+            )
+            cur_holdings[symbol] -= hands
+            if cur_holdings[symbol] == 0:
+                cur_holdings.pop(symbol)
+                cur_avg_bid_price.pop(symbol)
+                pre_price_of_holding.pop(symbol)
+                cur_holding_days.pop(symbol)
+            
+            return amount - commission
+        
         close_spread = -self.strategy.bid_ask_spread if self.strategy.position_type == 'Long' else self.strategy.bid_ask_spread   # spread必须负面影响
         open_spread = self.strategy.bid_ask_spread if self.strategy.position_type == 'Long' else - \
             self.strategy.bid_ask_spread
@@ -157,29 +191,24 @@ class IntegratedTester:
         # print(self._daily_position_open_sigs)
         for i in range(len(self._daily_position_open_sigs)):
             cur_date = self._date[i]
-        # handle close
-            close_today = self._daily_position_close_sigs[i]
+            position_change_report_today = []
+        # handle close for signals
+            close_today = set(self._daily_position_close_sigs[i])
             for symbol in close_today:
-                if symbol not in cur_holdings:
-                    continue
-                hands = cur_holdings.pop(symbol)
-                cur_avg_bid_price.pop(symbol)
-                pre_price_of_holding.pop(symbol)
-                cur_holding_days.pop(symbol)
-                # 买入价
-                close_at_price = get_price(symbol, cur_date) + close_spread
-                amount = close_at_price * hands                                             # 股票总金额
-                commission = amount * self.strategy.commission                                 # 手续费
                 # 更新可用余额
-                cur_available_balance += (amount - commission)
-                
+                cur_available_balance += handle_close(cur_date, symbol, 'signal', position_change_report_today)
+         # update holding days
             close_today_for_holding_days_limit = []
-            # update holding days
             for symbol in cur_holding_days:
                 cur_holding_days[symbol] += 1
                 if cur_holding_days[symbol] >= self.strategy.max_holding_days:
                     close_today_for_holding_days_limit.append(symbol)  
-        
+        # handle close for holing limit
+            for symbol in close_today_for_holding_days_limit:
+                if symbol in open_today:
+                    continue
+                cur_available_balance += handle_close(cur_date, symbol, 'holding days limit', position_change_report_today)
+            
         # 持有股票市值
             cur_holding_market_value = get_cur_holding_market_value(cur_date)
         # 名义资金
@@ -188,38 +217,15 @@ class IntegratedTester:
             capital_available_for_investing = max(
                 total_capital * (1 - self.strategy.capital_at_risk) - cur_holding_market_value, 0)
         # handle open + rebalance
-            open_today = self._daily_position_open_sigs[i]
+            open_today = set(self._daily_position_open_sigs[i])
             position_change = _position_rebalance(   # 执行所有close_sig之后，进行rebalance
                 stocks, cur_holdings, open_today, close_today, capital_available_for_investing, cur_date, self.strategy.rebalance_type)
-            position_change_report_today = []
+
             for symbol, hands in position_change.items():
                 hands = position_change[symbol]
                 price = get_price(symbol, cur_date)
                 if hands < 0:       # close for rebalancing
-                    price += close_spread
-                    cur_holdings[symbol] -= hands
-                    if cur_holdings[symbol] < 0:
-                        print('Error: holding < 0')
-                    if cur_holdings[symbol] == 0:
-                        cur_holdings.pop(symbol)
-                        cur_avg_bid_price.pop(symbol)
-                        pre_price_of_holding.pop(symbol)
-                        cur_holding_days.pop(symbol)
-                    amount = price * hands
-                    commission = amount * self.strategy.commission
-                    cur_available_balance += (amount - commission)
-
-                    position_change_report_today.append(
-                        {
-                            'symbol': symbol,
-                            'type': 'close',
-                            'bid_price': price,
-                            'hands': hands,
-                            'amount': amount,
-                            'commission': commission,
-                            'reason': 'signal'  # 'signal' / 'rebalance'
-                        }
-                    )
+                    cur_available_balance += handle_close(cur_date, symbol, 'rebalance', position_change_report_today, hands)
                 else:               # open / add position
                     pre_price_of_holding[symbol] = price
                     price += open_spread
@@ -235,10 +241,10 @@ class IntegratedTester:
                         {
                             'symbol': symbol,
                             'type': 'open',
-                            'bid_price': price,
+                            'bid_price': round(price, 2),
                             'hands': hands,
-                            'amount': amount,
-                            'commission': commission,
+                            'amount': round(amount),
+                            'commission': round(commission),
                             'reason': 'signal'  # 'signal' / 'rebalance'
                         }
                     )
@@ -246,19 +252,19 @@ class IntegratedTester:
             cur_holding_market_value = get_cur_holding_market_value(cur_date)
             cur_day_report = {
                 'date': str(cur_date),
-                'capital': cur_available_balance + cur_holding_market_value,
-                'available_capital': cur_available_balance,
+                'capital': round(cur_available_balance + cur_holding_market_value, 2),
+                'available_capital': round(cur_available_balance, 2),
                 'cur_position_detail': [
                     {
                         'symbol': symbol,
                         # 'return_rate_today': 0.001,      # 如果是卖出要算入今天的   #要算入买入comission
                         'hands': cur_holdings[symbol],
-                        'price_today': get_price(symbol, cur_date),
-                        'market_value': cur_holdings[symbol] * get_price(symbol, cur_date),
-                        'average_bid_price': cur_avg_bid_price[symbol],
-                        'bid_amount': cur_holdings[symbol] * cur_avg_bid_price[symbol],
-                        'commission': cur_holdings[symbol] * cur_avg_bid_price[symbol] * self.strategy.commission,
-                        'net_accum_return': get_price(symbol, cur_date) / (cur_avg_bid_price[symbol] * (1 + self.strategy.commission)) - 1
+                        'price_today': round(get_price(symbol, cur_date), 2),
+                        'market_value': round(round(cur_holdings[symbol] * get_price(symbol, cur_date)), 2),
+                        'average_bid_price': round(cur_avg_bid_price[symbol], 2),
+                        'bid_amount': round(cur_holdings[symbol] * cur_avg_bid_price[symbol], 2),
+                        'commission': round(cur_holdings[symbol] * cur_avg_bid_price[symbol] * self.strategy.commission, 2),
+                        'net_accum_return': round(100 * get_price(symbol, cur_date) / (cur_avg_bid_price[symbol] * (1 + self.strategy.commission)) - 100, 2)
                     } for symbol in cur_holdings
                 ],
                 'position_change': position_change_report_today

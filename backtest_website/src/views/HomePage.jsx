@@ -3,6 +3,8 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import Content from '../components/layout/content/Content';
 import Footer from '../components/layout/footer/Footer';
 import Header from '../components/layout/header/Header';
+import './AntdCustom.css'
+import './Resizeable.css'
 
 export default function HomePage() {
 

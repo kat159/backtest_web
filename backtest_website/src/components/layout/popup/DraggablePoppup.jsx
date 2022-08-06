@@ -4,19 +4,20 @@ import Draggable from 'react-draggable'
 import './DraggablePoppup.css'
 
 export default function DraggablePoppup(props) {
-    const { handleForceClosingClick, content, title, zIndexOfMask, maskStyle, contentStyle } = props
+    const { handleForceClosingClick, content, title, mask, zIndexOfMask = 2, maskStyle, contentStyle } = props
     return (
         <div>
-            {/* <div className='draggable-mask' style={{
-                // zIndex: zIndexOfMask ? zIndexOfMask : '2',
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: '100%',
-                height: '100%',
-                // backgroundColor: 'black',
-                ...maskStyle
-            }} /> */}
+            {   mask &&
+                <div className='draggable-mask' style={{
+                    zIndex: zIndexOfMask,
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: '100%',
+                    height: '100%',
+                    ...maskStyle
+                }} />
+            }
             <Draggable handle='.draggable-poppup-handle'>
                 <div style={{ zIndex: '2' }} className='draggable-poppup-outer' >
                     <div className='draggable-poppup-handle' >

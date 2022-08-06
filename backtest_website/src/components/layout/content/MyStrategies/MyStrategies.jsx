@@ -172,36 +172,14 @@ export default function MyStrategies() {
   return (
     <div >
       {
-        testReport &&
-        <DraggablePoppup
-          handleForceClosingClick={()=>{setTestReport(undefined)}}
-          title='Test Report'
-          content={
-            <BacktestReport
-              testReport={testReport}
-              setTestReport={setTestReport}
-              setDisplayingReport={setDisplayingReport}
-              visible={displayingReport}
-            />
-          }
-        />
-      }
-      {
-        strategyEditing ?
-          <div className='backtest-builder-whole-page'>
-            <Popconfirm
-              title='Current values will be overrided'
-              onConfirm={() => { form.setFieldsValue(sampleStrategy) }}
-            >
-              <Button type='dashed' >Use Sample Strategy</Button>
-            </Popconfirm>
-            <StrategeyBuilder form={form} />
-            <Space className='button-group-bottem' size={'large'} >
-              <Button onClick={handleEditFinish} >Finish</Button>
-              <Button onClick={handleCancel} >Cancel</Button>
-            </Space>
-          </div> :
-          isCreatingCriterion ?
+        testReport ?
+          <BacktestReport
+            testReport={testReport}
+            setTestReport={setTestReport}
+            setDisplayingReport={setDisplayingReport}
+            visible={displayingReport}
+          /> :
+          strategyEditing ?
             <div className='backtest-builder-whole-page'>
               <Popconfirm
                 title='Current values will be overrided'
@@ -211,20 +189,34 @@ export default function MyStrategies() {
               </Popconfirm>
               <StrategeyBuilder form={form} />
               <Space className='button-group-bottem' size={'large'} >
-                <Button onClick={handleCreateFinish} >Finish</Button>
+                <Button onClick={handleEditFinish} >Finish</Button>
                 <Button onClick={handleCancel} >Cancel</Button>
               </Space>
             </div> :
-            <div style={{ marginLeft: '20px' }}>
-              <Space style={{ marginBottom: '10px' }}>
-                <Button type='dashed' onClick={createCriteriaClick} >build strategy</Button>
-                <Input
-                  placeholder='search by name'
-                  onChange={handleSearchNameChange}
-                ></Input>
-              </Space>
-              <StrategyTable strategyList={strategyList} onRunTestButtonClick={onRunTestButtonClick} onDeleteButtonClick={onDeleteButtonClick} onEditButtonClick={onEditButtonClick} />
-            </div>
+            isCreatingCriterion ?
+              <div className='backtest-builder-whole-page'>
+                <Popconfirm
+                  title='Current values will be overrided'
+                  onConfirm={() => { form.setFieldsValue(sampleStrategy) }}
+                >
+                  <Button type='dashed' >Use Sample Strategy</Button>
+                </Popconfirm>
+                <StrategeyBuilder form={form} />
+                <Space className='button-group-bottem' size={'large'} >
+                  <Button onClick={handleCreateFinish} >Finish</Button>
+                  <Button onClick={handleCancel} >Cancel</Button>
+                </Space>
+              </div> :
+              <div style={{ marginLeft: '20px' }}>
+                <Space style={{ marginBottom: '10px' }}>
+                  <Button type='dashed' onClick={createCriteriaClick} >build strategy</Button>
+                  <Input
+                    placeholder='search by name'
+                    onChange={handleSearchNameChange}
+                  ></Input>
+                </Space>
+                <StrategyTable strategyList={strategyList} onRunTestButtonClick={onRunTestButtonClick} onDeleteButtonClick={onDeleteButtonClick} onEditButtonClick={onEditButtonClick} />
+              </div>
       }
 
     </div>

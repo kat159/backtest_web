@@ -69,7 +69,7 @@ export default function BacktestLog() {
   }, [])
   return (
     <div>
-      <span
+      {/* <span
         // onClick={(e)=>{e.preventDefault();}}   // 会stop child <a> from re-directing to the target url
         onMouseOver={(e)=>{e.preventDefault();}}
         onMouseLeave={(e)=>{e.preventDefault();}}
@@ -80,7 +80,7 @@ export default function BacktestLog() {
           content={<StockChart />}
           title={<span>Stock Chart ( powered by <a href='https://github.com/rrag/react-stockcharts' > react-stockcharts</a> ) </span>}
         />
-      </span>
+      </span> */}
 
       <Table dataSource={backtestRecordList} columns={columns}></Table>
       {/* <BacktestLogTable /> */}

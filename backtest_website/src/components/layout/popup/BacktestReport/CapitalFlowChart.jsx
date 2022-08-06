@@ -42,9 +42,11 @@ export default function CapitalFlowChart(props) {
 
     const options = {
         responsive: true,
+        // maintainAspectRatio: false,
         plugins: {
             legend: {
                 position: 'top',
+                display: false
             },
             title: {
                 display: true,
@@ -62,6 +64,7 @@ export default function CapitalFlowChart(props) {
                 handleChartValueClick(element[0].index);
             }
         }
+        
     };
 
 
@@ -71,6 +74,7 @@ export default function CapitalFlowChart(props) {
                 ref={chartRef}
                 options={options}
                 data={data}
+                // height={500}
             />
         </div>
     )

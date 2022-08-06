@@ -35,7 +35,7 @@ let textSimulator = ''
 
 class CandleStickStockScaleChartWithVolumeBarV3 extends React.Component {
   render() {
-    const { type, data: initialData, width, ratio, indicators } = this.props;
+    const { type, data: initialData, width, ratio, indicators, chartHeight, stockSymbol } = this.props;
 
     const xScaleProvider = discontinuousTimeScaleProvider
       .inputDateAccessor(d => d.date);
@@ -50,13 +50,28 @@ class CandleStickStockScaleChartWithVolumeBarV3 extends React.Component {
     const end = xAccessor(data[Math.max(0, data.length - 100)]);
     const xExtents = [start, end];
 
+    const chartMargin = {left: 40, right: 50, top: 10, bottom: 30}
+
+    const getHeightRatioForCandleStickChart = (chartHeight, chartMargin) => {
+      const indicatorNum = indicators ? indicators.length : 0
+      if (indicatorNum === 0) {
+        return 1
+      }
+      const res = 1 / Math.pow(indicatorNum, 0.33) 
+      // console.log('ratio:', res, Math.pow(indicatorNum, 0.33), indicatorNum)
+      return Math.max(1 / (1 + Math.pow(indicatorNum, 0.33)), 0.33)
+    }
+    const availableHeight = chartHeight - chartMargin.top - chartMargin.bottom
+    const heightRatioFoCandleStickChart = getHeightRatioForCandleStickChart(chartHeight, chartMargin)
+    const heightForCandleStickChart = heightRatioFoCandleStickChart * availableHeight
+
     return (
-      <ChartCanvas height={660}
+      <ChartCanvas height={chartHeight}
         ratio={ratio}
         width={width}
-        margin={{ left: 50, right: 50, top: 10, bottom: 30 }}
+        margin={chartMargin}
         type={type}
-        seriesName="MSFT"
+        seriesName={stockSymbol}
         data={data}
         xScale={xScale}
         xAccessor={xAccessor}
@@ -64,11 +79,11 @@ class CandleStickStockScaleChartWithVolumeBarV3 extends React.Component {
         xExtents={xExtents}
       >
 
-        <Chart id={1} height={300} yExtents={d => [d.high, d.low]} >
+        <Chart id={1} height={heightForCandleStickChart} yExtents={d => [d.high, d.low]} >
           <YAxis axisAt="right" orient="right" ticks={5} />
           <XAxis axisAt="bottom" orient="bottom" showTicks={false} />
           <CandlestickSeries />
-          <OHLCTooltip forChart={1} origin={[-40, 0]} />
+          <OHLCTooltip forChart={1} origin={[-25, 0]} />
 
           <MouseCoordinateY
             at="right"
@@ -86,7 +101,7 @@ class CandleStickStockScaleChartWithVolumeBarV3 extends React.Component {
               formulas.push(variable.formula);
             }
             const indicatorNum = indicators.length
-            const totalHeight = 300
+            const totalHeight = availableHeight - heightForCandleStickChart - 20
             const topPadding = 20
             const heightForEach = (totalHeight - topPadding * indicatorNum) / indicatorNum
             const startDistanceToBottom = totalHeight
@@ -106,8 +121,8 @@ class CandleStickStockScaleChartWithVolumeBarV3 extends React.Component {
                 axisAt="right"
                 orient="right"
                 ticks={tickNum}
-                // tickFormat={format("." + tickDemical + "s")}   // 用了之后-0.1会变成-100M
-                tickFormat={format("." + tickDemical + "f")}
+                tickFormat={format("." + tickDemical + "s")}   // 用了之后-0.1会变成-100M
+                // tickFormat={format("." + tickDemical + "f")}
               />
               <XAxis
                 axisAt="bottom"
@@ -125,33 +140,27 @@ class CandleStickStockScaleChartWithVolumeBarV3 extends React.Component {
                   return type === 'Bar' ?
                     <BarSeries
                       key={nanoid()}
-                      yAccessor={d => d[formula]}
+                      yAccessor={d => d[formula] ?? 0}
                       fill={colorSelector}
                     /> :
                     <LineSeries
                       key={nanoid()}
-                      yAccessor={d => d[formula]}
+                      yAccessor={d => d[formula] ?? 0}
                       stroke={color}
                     />
                 })
               }
-
-              {
+              {   // tooltips
                 variables.map((variable, index) => {
                   const { name, formula, type, color, colorSelector, vairableTickDemical } = variable
                   // console.log(textSimulator)
-                  const indent = -23 + (
+                  const indent = 0 + (
                     pixelWitdh(
                       textSimulator,
                       { size: 11 }
-                    ) +
-                    // pixelWitdh(    // variable的decimal不同就会出错
-                    //   ' L0.' + (new Array(vairableTickDemical ?? tickDemical).fill(0).join('')),
-                    //   { size: 11 }
-                    // ) * index +
-                    (index === 0 ? 0 : pixelWitdh('Edit ', { size: 11 }))
-                  ) * 1
-
+                    ) 
+                    // + (index === 0 ? 0 : pixelWitdh('Edit ', { size: 11 }))
+                  )
                   textSimulator += name + '   L0' + new Array(vairableTickDemical ?? tickDemical).fill(0).join('')
 
                   return <SingleValueTooltip
@@ -163,8 +172,9 @@ class CandleStickStockScaleChartWithVolumeBarV3 extends React.Component {
                       }
                       e.stopPropagation()
                     }}
-                    yAccessor={d => d[formula]}
-                    yLabel={(index === 0 ? 'Edit ' : '') + name}
+                    yAccessor={d => d[formula] ?? 0}
+                    // yLabel={(index === 0 ? 'Edit ' : '') + name}
+                    yLabel={name}
                     yDisplayFormat={format("." + (vairableTickDemical ?? tickDemical) + "f")}
                     /* valueStroke={atr14.stroke()} - optional prop */
                     /* labelStroke="#4682B4" - optional prop */

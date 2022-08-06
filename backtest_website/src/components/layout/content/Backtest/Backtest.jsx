@@ -110,44 +110,41 @@ export default function Backtest() {
     closeCriteriaLogic: 'and',
   }
   return (
-    <div className='backtest-builder-whole-page'>
-      <Space>
-        <Popconfirm
-          title='Current values will be overrided' 
-          onConfirm={()=>{form.setFieldsValue(sampleStrategy)}}
-        >
-          <Button type='dashed' >Use Sample Strategy</Button>
-        </Popconfirm>
-        <Popconfirm 
-          title='Redirect to My Strategy page' 
-          onConfirm={handleUseExistingStrategy}
-        >
-          <Button type='dashed' >Use Existing Strategy</Button>
-        </Popconfirm>
-      </Space>
+    <div >
       {
-      testReport && 
-      <DraggablePoppup
-        handleForceClosingClick={()=>{setTestReport(undefined)}}
-        title='Test Report'
-        content={
-          <BacktestReport 
-            strategy={form.getFieldsValue(true)} 
-            strategyId={curStrategyId} 
-            testReport={testReport} 
-            setTestReport={setTestReport} 
-            setDisplayingReport={setDisplayingReport} 
-            visible={displayingReport} 
-          />
-        }
-      />
-      }
-      <StrategeyBuilder formRef={formRef} form={form} />
-      <Space className='button-group-bottem' size={'large'} >
-        <Button type='link' onClick={handleReset}>Reset</Button>
-        <Button onClick={handleSave} >Save</Button>
-        <Button onClick={handleRunTest} >Run Test</Button>
-      </Space>
+        testReport ? <BacktestReport 
+        strategy={form.getFieldsValue(true)} 
+        strategyId={curStrategyId} 
+        testReport={testReport} 
+        setTestReport={setTestReport} 
+        setDisplayingReport={setDisplayingReport} 
+        visible={displayingReport} 
+      /> : 
+      <div className='backtest-builder-whole-page'
+      >
+        <Space>
+          <Popconfirm
+            title='Current values will be overrided' 
+            onConfirm={()=>{form.setFieldsValue(sampleStrategy)}}
+          >
+            <Button type='dashed' >Use Sample Strategy</Button>
+          </Popconfirm>
+          <Popconfirm 
+            title='Redirect to My Strategy page' 
+            onConfirm={handleUseExistingStrategy}
+          >
+            <Button type='dashed' >Use Existing Strategy</Button>
+          </Popconfirm>
+        </Space>
+        <StrategeyBuilder formRef={formRef} form={form} />
+        <Space className='button-group-bottem' size={'large'} >
+          <Button type='link' onClick={handleReset}>Reset</Button>
+          <Button onClick={handleSave} >Save</Button>
+          <Button onClick={handleRunTest} >Run Test</Button>
+        </Space>
+    </div>
+    }
+      
     </div>
   )
 }
