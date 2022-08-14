@@ -28,7 +28,7 @@ export default function RisizableDraggablePoppup(props) {
             }}
             dragHandleClassName='risizable-draggable-poppup-handle'
             onResize={(e, direction, ref, delta, position) => {
-                console.log(outerSize)
+                // console.log(outerSize)
                 setOuterSize({
                     width: ref.offsetWidth,
                     height: ref.offsetHeight,

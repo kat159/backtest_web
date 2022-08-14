@@ -37,4 +37,4 @@ class StrategyUtil {
     }
 }
 
-module.exports = new StrategyUtil();
+export default new StrategyUtil();

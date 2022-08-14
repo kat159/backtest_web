@@ -4,7 +4,8 @@ import PubSub from 'pubsub-js'
 import { useEffect } from 'react'
 import { useRef } from 'react'
 import { Button, Input, message, Tooltip } from 'antd'
-import { CloseOutlined, ColumnWidthOutlined, DoubleRightOutlined, EditOutlined, ExpandAltOutlined } from '@ant-design/icons'
+import { CheckOutlined, CloseOutlined, ColumnWidthOutlined, DoubleRightOutlined, EditOutlined, ExpandAltOutlined } from '@ant-design/icons'
+import criterionService from '../../../../services/criterionService'
 
 export default function CriterionBuilder(
     curNestedCriterion,
@@ -27,9 +28,6 @@ export default function CriterionBuilder(
         PubSub.publish(onClickMsg, { route: curRoute, requiredReturnType: requiredReturnType });
     }
 
-    const isTextInput = curNestedCriterion.length > 0
-        && (curNestedCriterion[0] === '' || !isNaN(parseInt(curNestedCriterion[0]))); // Exact Number Input
-
     // 不可以有state //这个组件用了外部给的跟外部state有关的param，如果因为state rerender会丢失param，导致报错
     // const [mouseOver, setMouseOver] = useState(false); 
     const selectionStyle = {
@@ -50,9 +48,9 @@ export default function CriterionBuilder(
     }
 
     let returnComponent = '';
-
+    const exactInputId = 'E_x_A_c_T_i_N_p_U_t#'
     const isTempItem = curNestedCriterion.length > 0 && curNestedCriterion[0].indexOf('tempItem#') >= 0
-
+    const isTextInput = curNestedCriterion.length > 0 && curNestedCriterion[0].indexOf(exactInputId) >= 0
     if (curNestedCriterion.length === 0) {  // Empty
         returnComponent =
             <span
@@ -119,21 +117,19 @@ export default function CriterionBuilder(
         }
 
     } else if (isTextInput) {   // Exact Number Input
-        const curVal = curNestedCriterion[0];
+        // console.log(curSelectedRoute, curRoute);
+        const curVal = curNestedCriterion[0].slice(exactInputId.length);
         const onChange = (e) => {
-            const value = e.target.value
-            if (value.length > 0) {
-                if (value[0] === '0') {
-                    message.error('Using future value is not allowed.')
-                } else if (value[0] === '-') {
-                    message.error('Using future value is not allowed.')
-                } else if (value[value.length - 1] === '.') {
-                    message.error('Only Integer allowed')
-                }
+            const canBeNumber = criterionService.canBeNumber(requiredReturnType)
+            // const canBeNumber = requiredReturnType.indexOf('Number') !== -1
+            if (canBeNumber) {
+                e.target.value = e.target.value.replace(/[^0-9-.]*/g, '');
+            } else {
+                e.target.value = e.target.value.replace(/[^0-9]*/g, '');
             }
-            e.target.value = value.replace(/[^0-9]*/g, '');
-            handleInputValueChange(e.target.value);
+            handleInputValueChange(e.target.value, requiredReturnType);
         }
+
         returnComponent =
             <span
                 key={nanoid()}
@@ -143,7 +139,9 @@ export default function CriterionBuilder(
                     e.preventDefault(); e.stopPropagation();
                     const inputStyle = e.currentTarget.querySelector('input').style
                     inputStyle.outlineWidth = '3px'         // **Input的border在内侧，outline才是相当于其他元素的border！！
-                    inputStyle.outlineColor = 'rgb(43, 114, 161)'
+                    if (curSelectedRoute !== curRoute) {
+                        inputStyle.outlineColor = 'rgb(43, 114, 161)'
+                    }
                 }}
                 onMouseOut={(e) => {
                     e.preventDefault(); e.stopPropagation();
@@ -166,12 +164,14 @@ export default function CriterionBuilder(
                             {
                                 backgroundColor: curSelectedRoute !== curRoute && curVal.length > 0 ?
                                     '#c4cbff' : 'white',
-                                // ...selectionStyle,
                                 width: curSelectedRoute !== curRoute && curVal.length > 0 ?
                                     4 + curVal.length * 8 + 'px' :
                                     Math.max(4 + curVal.length * 8, 30) + 'px',
+                                outlineWidth: curSelectedRoute === curRoute ? '2px' : '0px',
+                                outlineColor: selectionStatus === 'edit' ? 'blue' : selectionStatus === 'warning' ? 'red' : ''
                             }
-                        }></input>
+                        }
+                    ></input>
                 </Tooltip>
             </span>
 
@@ -245,8 +245,16 @@ export default function CriterionBuilder(
         <span key={nanoid()}
             onMouseOut={(e) => { e.preventDefault(); e.stopPropagation(); }}
             onMouseOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            onMouseEnter={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            onMouseLeave={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onMouseEnter={(e) => {
+                e.preventDefault();
+                // e.stopPropagation();     // 会导致tooltips不显示
+                // console.log('enter', e.target)
+            }}
+            onMouseLeave={(e) => {
+                e.preventDefault();
+                // e.stopPropagation(); 
+                // console.log('leave', e.target)
+            }}
         >
             {
                 returnComponent

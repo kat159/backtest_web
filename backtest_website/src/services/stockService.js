@@ -1,4 +1,4 @@
-const axios = require('axios')
+import axios from "axios";
 
 const baseURL = 'http://127.0.0.1:5000/stocks';
 
@@ -19,4 +19,4 @@ class StockService {
     }
 }
 
-module.exports = new StockService();
+export default new StockService();

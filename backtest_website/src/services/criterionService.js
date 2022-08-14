@@ -1,10 +1,23 @@
-const axios = require('axios');
-const criterionItemService = require('./criterionItemService');
+import axios from 'axios';
+import criterionItemService from './criterionItemService';
+
 const baseURL = 'http://127.0.0.1:3000/criteria';
 
 const {itemDict} = criterionItemService.getAll()
 
 class CriterionService {
+
+    exactInputId = 'E_x_A_c_T_i_N_p_U_t#'
+    isExactInput (value) {
+        return value.indexOf(this.exactInputId) >= 0
+    }
+
+    canBeNumber(returnType) {
+        const index = returnType.indexOf('Number');
+        const res = index >= 0 && (index === 0 || returnType[index - 1] !== ' ');
+        return res
+    }
+
     async getAll(userId) {
         return axios({
             method: 'get',
@@ -146,8 +159,8 @@ class CriterionService {
             if (curNestedCriterion[0] === '') {     // unfilled Exact Number
                 return '__';
             }
-            if (!isNaN(parseInt(curNestedCriterion[0]))) {  // Exact Number
-                return curNestedCriterion[0]
+            if (this.isExactInput(curNestedCriterion[0])) {  // Exact Number
+                return curNestedCriterion[0].slice(this.exactInputId.length)
             }
             if (this.isTemporaryCriterion(curNestedCriterion[0])) {  // temp item id
                 const tempItem = this.getTemporaryCriterionById(curNestedCriterion[0], temporaryCriterionList)
@@ -178,4 +191,4 @@ class CriterionService {
     }
 }
 
-module.exports = new CriterionService();
+export default new CriterionService();

@@ -23,7 +23,7 @@ export default function MyCriteria() {
         retrieveCriterionData();
 
         const token = PubSub.subscribe(onEditBottunClickMsg, (msg, data) => {
-            console.log('EDIT BUTTON:', data)
+            // console.log('EDIT BUTTON:', data)
             const { criterionId, nestedCriterion, criterionName } = data
             setCriterionBeingEdited(data)
             const token2 = PubSub.subscribe(onEditFinishMsg, (msg, data) => {
@@ -34,10 +34,10 @@ export default function MyCriteria() {
         })
         const token2 = PubSub.subscribe(onDeleteButtonClickMsg, (msg, data) => {
             const { criterionId, } = data;
-            console.log('DELETE BUTTON:', criterionId)
+            // console.log('DELETE BUTTON:', criterionId)
             criterionService.deleteById(criterionId).then(
                 res => {
-                    console.log('Delete Result:', res)
+                    // console.log('Delete Result:', res)
                     retrieveCriterionData();
                 }
             )
@@ -68,7 +68,7 @@ export default function MyCriteria() {
     const createCriteriaClick = () => {
         setIsBuildingCriteria(true);
         const token = PubSub.subscribe(onCreateFinishMsg, (msg, data) => {
-            console.log('MyCriteria receive finish create criterion data:', data)
+            // console.log('MyCriteria receive finish create criterion data:', data)
             const { forceClosing, } = data;
             if (!forceClosing) {
 

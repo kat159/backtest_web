@@ -1,7 +1,6 @@
-const axios = require('axios');
-const { DATE_FORMAT_BACKEND } = require('../config/config');
-const { decodeCriterionById } = require('./criterionService');
-const criterionService = require('./criterionService');
+import axios from 'axios';
+import {DATE_FORMAT_BACKEND} from '../config/config'
+import criterionService from './criterionService';
 
 const baseURL = 'http://127.0.0.1:5000';
 
@@ -58,4 +57,4 @@ class BacktestService {
     }
 }
 
-module.exports = new BacktestService();
+export default new BacktestService();

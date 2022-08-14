@@ -9,4 +9,4 @@ class MyArray {
     }
 }
 
-module.exports = new MyArray();
+export default new MyArray();

@@ -1,4 +1,4 @@
-const axios = require('axios')
+import axios from 'axios';
 
 const baseURL = 'http://127.0.0.1:3000/criteria_item';
 // paramTypes: ['Number', 'Exact Number', 'Bool', 'Integer'] // 
@@ -542,4 +542,4 @@ class CriterionItemService {
     }
 }
 
-module.exports = new CriterionItemService();
+export default new CriterionItemService();

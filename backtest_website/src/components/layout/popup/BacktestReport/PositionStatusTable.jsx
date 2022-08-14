@@ -8,7 +8,7 @@ export default function PositionStatusTable(props) {
     const dailyReport = testReport.daily_test_report
     const curDayReport = dailyReport[curIndex]
     curDayReport.key = nanoid()
-    console.log(curDayReport)
+    // console.log(curDayReport)
     const columns = [
         {
             title: 'Date',
@@ -113,7 +113,7 @@ export default function PositionStatusTable(props) {
 
     const [selectedDailyDetail, setSelectedDailyDetail] = useState('current_position')
     const onChange = (e) => {
-        console.log(e.target.value)
+        // console.log(e.target.value)
         setSelectedDailyDetail(e.target.value)
     }
 

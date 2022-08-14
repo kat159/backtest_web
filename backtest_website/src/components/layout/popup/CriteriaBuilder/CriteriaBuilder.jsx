@@ -135,7 +135,7 @@ export default function CriteriaBuilder(props) {
             return ;
         }
         if (criterionBeingEdited) { // editing
-            console.log('Editing Criterion Click...', criterionBeingEdited)
+            // console.log('Editing Criterion Click...', criterionBeingEdited)
             const {criterionId, } = criterionBeingEdited
             const {data} = await criterionService.updateCriterion(criterionId, userId, nameInputRef.current.input.value, res.criteriaStr, nestedBuilidingCriterion)
             if (data.err_code === 0) {
@@ -144,7 +144,7 @@ export default function CriteriaBuilder(props) {
                 setCriterionNameExists(true)
             }
         } else {
-            console.log('Adding Criterion Click..')
+            // console.log('Adding Criterion Click..')
             const {data} = await criterionService.addCriterion(
                 userId, nameInputRef.current.input.value, res.criteriaStr, nestedBuilidingCriterion
             )

@@ -1,7 +1,7 @@
-const axios = require('axios');
-const { DATE_FORMAT_BACKEND } = require('../config/config');
-const moment = require('moment');
-const strategyService = require('./strategyService');
+import strategyService from './strategyService';
+import axios from 'axios';
+import {DATE_FORMAT_BACKEND} from '../config/config'
+import moment from 'moment';
 const baseURL = 'http://127.0.0.1:3000/backtest_logs';
 
 class BacktestLogService {
@@ -51,4 +51,4 @@ class BacktestLogService {
     }
 }
 
-module.exports = new BacktestLogService();
+export default new BacktestLogService();

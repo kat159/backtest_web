@@ -72,10 +72,38 @@ export default function StockChart(props) {
     // const [symbol, setSymbol] = useState(stockSymbol)
     const [indicatorList, setIndicatorList] = useState(indicators)
     const [data, setData] = useState(undefined)
+    const trackChartSetting = {
+        id: 1,
+        indicatorName: 'Stock Tracking',
+        tickNum: 3,
+        tickDemical: 2,
+        variables: [
+            {                   // LineSeries or BarSeries
+                name: 'Net Accum Return',
+                formula: 'netAccumReturn',
+                type: 'Line',
+                color: '#2ca02c',  // Bar必须是Selector， Line必须color
+                data: [],        // **TODO：交给stock chart之前就fetch好，每次外部某个indicator参数改变，只重新fetch参数改变的那个indicator，不然indicators参数一改，stockChart就要重新全部fetch
+                vairableTickDemical: 2,
+            },
+            {                   // LineSeries or BarSeries
+                name: 'Holing Amount',
+                formula: 'holdingAmount',
+                type: 'Bar',
+                colorSelector: data => data.close > data.open ? "#6BA583" : "red",  // Bar必须是Selector， Line必须color
+                data: [],        // **TODO：交给stock chart之前就fetch好，每次外部某个indicator参数改变，只重新fetch参数改变的那个indicator，不然indicators参数一改，stockChart就要重新全部fetch
+                vairableTickDemical: 2,
+            },
+            
+            
+        ],
+    }
     useEffect(() => {
         // console.log(testReport.daily_test_report)
         setData(undefined)
         getData({
+            dailyTestReport: testReport.daily_test_report,
+            trackChartSetting: trackChartSetting,
             stockSymbol: stockSymbol,
             indicators: indicatorList,  // **TODO：交给stock chart之前就fetch好，每次外部某个indicator参数改变，只重新fetch参数改变的那个indicator，不然indicators参数一改，stockChart就要重新全部fetch
         }).then(data => {
@@ -107,7 +135,7 @@ export default function StockChart(props) {
             {
                 data === undefined ?
                     <div>Loading...</div> :
-                    <CandleStickChart stockSymbol={stockSymbol} chartHeight={chartHeight} indicators={indicatorList} data={data} />
+                    <CandleStickChart stockSymbol={stockSymbol} chartHeight={chartHeight} indicators={[trackChartSetting, ...indicatorList, ]} data={data} />
                 // <TypeChooser>
                 //     {type =>
                 //         <CandleStickChart stockSymbol={stockSymbol} chartHeight={chartHeight} indicators={indicatorList} type={type} data={data} />

@@ -9,7 +9,7 @@ import { useRef } from 'react';
 import { useForm } from 'antd/lib/form/Form';
 import { Button, Space, Input, Popconfirm } from 'antd';
 import moment from 'moment';
-import { DATE_FORMAT } from '../../../../config/config';
+import {DATE_FORMAT} from '../../../../config/config';
 import backtestService, { formDataToBackendFormat } from '../../../../services/backtestService';
 import BacktestReport from '../../popup/BacktestReport/BacktestReport';
 import criterionService from '../../../../services/criterionService';

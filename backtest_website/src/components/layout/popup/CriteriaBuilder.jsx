@@ -20,7 +20,7 @@ export default function CriteriaBuilder(props) {
     const saveTempCriterionButtonRef = useRef(null)
     const temporaryCriterionTagsRef = useRef(null)
     const alertMessageRef = useRef(null)
-    const excludeClickOutsideRefs = [selectorTableRef, criterionBuilderRef, finishButtonRef, saveTempCriterionButtonRef, temporaryCriterionTagsRef]
+    const excludeClickOutsideRefs = [selectorTableRef, criterionBuilderRef, finishButtonRef, saveTempCriterionButtonRef, temporaryCriterionTagsRef, alertMessageRef]
     const handleClickOutside = event => {
         // console.log('Inner')
         event.stopPropagation()
@@ -69,6 +69,7 @@ export default function CriteriaBuilder(props) {
     const [toolTips, setToolTips] = useState(true)
 
     const finalCriterionId = '_F_i_N_a_L_#'// 识别是否是final
+    const exactInputId = 'E_x_A_c_T_i_N_p_U_t#'     // 识别是否是exact input
 
     const [finalNestedCriterion, setFinalNestedCriterion] = useState([]);   // no dummy bracket
 
@@ -92,9 +93,70 @@ export default function CriteriaBuilder(props) {
         initializeCriterion()
     }, [])
 
+    const checkExactNumberInput = (nestedCriterion) => {
+        const helper = (curRoute, nestedCriterion, requiredReturnType) => {
+            // console.log(nestedCriterion) 
+            if (nestedCriterion.length === 0) {     // 未填
+                return {
+                    status: 'Valid',
+                    location: curRoute
+                }
+            }
+            const itemName = nestedCriterion[0];
+            if (isExactInput(itemName)) {
+                const number = itemName.slice(exactInputId.length)
+                if (!isNumeric(number)) {
+                    return {
+                        status: 'Error',
+                        location: curRoute,
+                        error: 'Invalid Number',
+                        errorDetail: 'contains invalid input number: ' + number
+                    }
+                }
+                if (!criterionService.canBeNumber(requiredReturnType)) {    // 必须是integer
+                    if (number[0] === '0' || number[0] === '-' || number.indexOf('.') !== -1) {
+                        return {
+                            status: 'Error',
+                            location: curRoute,
+                            error: 'Invalid Number',
+                            errorDetail: 'Expect: Positive Integer, Get: ' + number,
+                        }
+                    }
+                }
+                return {
+                    status: 'Valid',
+                    location: curRoute
+                }
+            }
+            // console.log(itemName) 
+            if (isTemporaryCriterion(itemName)) {  // temp item id
+                const tempItem = getTemporaryCriterionById(itemName)
+                // console.log(tempItem)
+                return helper(curRoute, tempItem.nestedCriterion, requiredReturnType)
+            }
+            const itemInfo = itemDict[itemName];
+            const { paramTypes, returnType } = itemInfo
+            for (let i = 1; i < nestedCriterion.length; i++) {
+                const res = helper(curRoute + i, nestedCriterion[i], paramTypes[i - 1]);
+                const { status, returnType } = res
+                if (status === 'Error') {
+                    return res
+                }
+            }
+            const res = {
+                status: 'Valid',
+                location: curRoute
+            }
+            return res
+        }
+        const res = helper('0', nestedCriterion[0], undefined);
+        return res
+    }
     const handleSaveToFinalCriterion = () => {
         const newCriterion = getDeepcopyOfNestedCriterion(nestedBuilidingCriterion[0]);
-        if (validateCriterionParamType([newCriterion], finalCriterionId, 'Bool') && validateCriterionEmpty([newCriterion])) {
+        if (validateCriterionEmpty([newCriterion]) && validateCriterionExactNumberInput([newCriterion])
+            && validateCriterionParamType([newCriterion], finalCriterionId, 'Bool', true)
+        ) {
             setFinalNestedCriterion(newCriterion)
             handleCancelEditingCriterion()
         }
@@ -270,7 +332,7 @@ export default function CriteriaBuilder(props) {
             })
         }
         //从buildingCriterion中删掉
-        const newBuildingCriterionList = removeFromNestedCriterion(itemId, nestedBuilidingCriterion[0]);    
+        const newBuildingCriterionList = removeFromNestedCriterion(itemId, nestedBuilidingCriterion[0]);
 
         const newData = temporaryCriterionList.filter(temporaryCriterion => {       // 删掉这个item
             return temporaryCriterion.id !== itemId;
@@ -322,6 +384,9 @@ export default function CriteriaBuilder(props) {
         // await setTemporaryCriterionList(newData);    // **setState后面不要用await，await只对返回promise的有效，setState不返回promise 有效也只是巧合！！
         setTemporaryCriterionList(newData);
     }
+    const isExactInput = (value) => {
+        return value.indexOf(exactInputId) >= 0
+    }
     const stringfyCriterion = (nestedCriterion, expandTempItem = false) => {  // no validity check, replace empty array with __
         const helper = (curNestedCriterion) => {
             if (curNestedCriterion.length === 0) { // 有未填的空
@@ -330,8 +395,8 @@ export default function CriteriaBuilder(props) {
             if (curNestedCriterion[0] === '') {     // unfilled Exact Number
                 return '__';
             }
-            if (!isNaN(parseInt(curNestedCriterion[0]))) {  // Exact Number
-                return curNestedCriterion[0]
+            if (isExactInput(curNestedCriterion[0])) {  // Exact Number
+                return curNestedCriterion[0].slice(exactInputId.length)
             }
             if (isTemporaryCriterion(curNestedCriterion[0])) {  // temp item id
                 // console.log('id:', curNestedCriterion[0])
@@ -343,6 +408,7 @@ export default function CriteriaBuilder(props) {
                 return tempItem.name
             }
             const itemName = curNestedCriterion[0];
+            // console.log(itemName) 
             const itemInfo = itemDict[itemName];
             const { leadingText, paramTypes, joinChar, returnType } = itemInfo
             if (paramTypes.length === 0) {  // 不需要param
@@ -376,7 +442,7 @@ export default function CriteriaBuilder(props) {
         }
         return helper('0', nestedBuilidingCriterion[0])
     }
-    const checkParamType = (nestedCriterion, forbiddenId = undefined, finalType = undefined) => {    // only check type and **self-reference, exclude empty error , need **additional bracket
+    const checkParamType = (nestedCriterion, forbiddenId = undefined, finalType = undefined, checkExactInput = false) => {    // only check type and **self-reference, exclude empty error , need **additional bracket
         // forbiddenId，用于防止self-reference, 如果正在edit或准备保存到var1，那么递归结构item的时候就不能碰到var1的id
         const helper = (curRoute, nestedCriterion) => {
             if (nestedCriterion.length === 0) {     // 未填
@@ -394,12 +460,13 @@ export default function CriteriaBuilder(props) {
                     location: curRoute
                 }
             }
-            if (!isNaN(parseInt(itemName[0]))) {  // Exact Number 的input框
+            if (isExactInput(itemName)) {  // Exact Number 的input框
                 // 注意** 没有检查input empty， input必须有数字，在checkEmpty中要查
                 return {
                     status: 'Valid',
                     returnType: 'Exact Number',     // 返回Exact
-                    location: curRoute
+                    location: curRoute,
+                    value: itemName.slice(exactInputId.length)
                 }
             }
             if (isTemporaryCriterion(itemName)) {   // itemName is temp criterion id
@@ -473,6 +540,29 @@ export default function CriteriaBuilder(props) {
                                 location: curRoute + i
                             }
                         }
+                        // 检查exact input
+                        if (checkExactInput && res.returnType === 'Exact Number') {
+                            const number = res.value
+                            if (!isNumeric(number)) {
+                                return {
+                                    status: 'Error',
+                                    location: curRoute,
+                                    error: 'Invalid Number',
+                                    errorDetail: 'contains invalid input number: ' + number
+                                }
+                            }
+                            if (!criterionService.canBeNumber(requiredType)) {    // 必须是integer
+                                if (number[0] === '0' || number[0] === '-' || parseFloat(number).toFixed() - parseFloat(number) >= 1e-6) {
+                                    return {
+                                        status: 'Error',
+                                        location: curRoute,
+                                        error: 'Invalid Number',
+                                        errorDetail: 'Expect: Positive Integer, Get: ' + number,
+                                    }
+                                }
+                            }
+                        }
+
                     }
                     if (curReturnType === i - 1) {     // 数字表示根据index,根据现在遇到的child的return type
                         if (res.returnType === 'Empty' || res.returnType === 'Empty Input') {
@@ -495,21 +585,28 @@ export default function CriteriaBuilder(props) {
                 }
 
             }
+            var curExactNumberValue = undefined;
             if (curReturnType === '+-*/') {    // +-*/ 表示基础数学加减乘除, 有Number在上面循环中会改成Number
                 if (exactNumberCounter === paramTypes.length) {// 如果都是Exact Number， returnType 是 Exact Number
                     curReturnType = 'Exact Number'
+                    var num1 = nestedCriterion[1][0].slice(exactInputId.length)
+                    var num2 = nestedCriterion[2][0].slice(exactInputId.length)
+                    curExactNumberValue = (parseFloat(num1) + parseFloat(num2)).toString()
                 } else if (hasEmptyChild || hasEmptyInput) {
                     //没有Number，但有empty 或 Empty Input，那么Number,Integer, Exact Number都有可能
                     curReturnType = 'Number/Integer/Exact Number'
                 } else {  // 没碰到Number， 全部填满了，又不是全部都是Exact，那么只可能是Integer，因为Integer + Exac = Integer Series
                     curReturnType = 'Integer';  //
+                    var num1 = nestedCriterion[1][0].slice(exactInputId.length)
+                    var num2 = nestedCriterion[2][0].slice(exactInputId.length)
+                    // Todo: num1, num2可能是float，之前假设exact input必须是integer，现在可以是float
                 }
-
             }
             const res = {
                 status: 'Valid',
                 returnType: curReturnType,
-                location: curRoute
+                location: curRoute,
+                value: curExactNumberValue
             }
             return res
         }
@@ -540,7 +637,7 @@ export default function CriteriaBuilder(props) {
                     location: curRoute
                 }
             }
-            if (nestedCriterion[0] === '') {    // Exact Number is not Entered
+            if (isExactInput(nestedCriterion[0]) && nestedCriterion[0].slice(exactInputId.length) === '') {    // Exact Number is not Entered
                 return {
                     status: 'Error',
                     error: 'Empty Input',
@@ -665,7 +762,7 @@ export default function CriteriaBuilder(props) {
 
         const criterionStr = stringfyCriterion(finalNestedCriterion);
         if (criterionBeingEdited) { // editing
-            console.log('Editing Criterion Click...', criterionBeingEdited)
+            // console.log('Editing Criterion Click...', criterionBeingEdited)
             const { criterionId, } = criterionBeingEdited
             const { data } = await criterionService.updateCriterion(
                 criterionId, userId, nameInputRef.current.input.value,
@@ -683,7 +780,7 @@ export default function CriteriaBuilder(props) {
                 setCriterionNameExists(true)
             }
         } else {
-            console.log('Adding Criterion Click..')
+            // console.log('Adding Criterion Click..')
             const { data } = await criterionService.addCriterion(
                 userId, nameInputRef.current.input.value, criterionStr,
                 finalNestedCriterion, temporaryCriterionList,
@@ -731,7 +828,7 @@ export default function CriteriaBuilder(props) {
                 return [replacingItemName]
                     .concat(paramTypes.map(paramType => {
                         if (paramType.indexOf('Exact Number') >= 0) {
-                            return ['']
+                            return [exactInputId]
                         } else {
                             return []
                         }
@@ -791,8 +888,35 @@ export default function CriteriaBuilder(props) {
         //     insertValidCriterion(newCriterion);
         // }
     }
-    const handleExactNumberInputChange = (value) => {
-        const res = replaceCriterionWithNestedCriterion([value])
+    const isNumeric = (str) => {
+        // 注意 1e3 会是true，但是input限制了字母，所以没事
+        if (typeof str != "string") return false // we only process strings!  
+        if (str.length === 0) return false
+        if (str[0] === '0' && str.length === 1) return false
+        if (str[0] === '0' && str.length > 1 && str[1] !== '.') return false
+        return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+            !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+    }
+    const handleExactNumberInputChange = (value, requiredType) => {
+        // const canBeNumber = requiredType.indexOf('Number') !== -1
+        const canBeNumber = criterionService.canBeNumber(requiredType);
+        if (value.length > 0) {
+            if (!canBeNumber && (value[0] === '0' || value[0] === '-' || value.indexOf('.') !== -1)) {
+                message.error('Must be positive integer.')
+                setNestedBuildingCriterion([...nestedBuilidingCriterion])
+                setSelectedBuildingCriterionStatus('warning')
+                return
+            }
+            if (!isNumeric(value)) {
+                // message.error('Invalid value.')
+                setSelectedBuildingCriterionStatus('warning')
+                const res = replaceCriterionWithNestedCriterion([exactInputId + value])
+                setNestedBuildingCriterion(res)
+                return
+            }
+        }
+        setSelectedBuildingCriterionStatus('edit')
+        const res = replaceCriterionWithNestedCriterion([exactInputId + value])
         setNestedBuildingCriterion(res)
     }
     const getRequiredReturnTypeOfSelected = () => {     // 
@@ -804,7 +928,14 @@ export default function CriteriaBuilder(props) {
             if (curRoute === curRouteOfSelectedBuildingCriterion) {
                 return curRequiredReturnType;
             }
-            if (nestedCriterion.length === 0 || nestedCriterion[0] === '' || !isNaN(parseInt(nestedCriterion[0]))) { // 
+            if (nestedCriterion.length === 0) { // 
+                return undefined
+            }
+            if (nestedCriterion[0] === '' || isExactInput(nestedCriterion[0])) {
+                // empty和input如果是selected route在上面就会退出
+                // 如果不是selected route，返回undefined，而不是Exact Number，
+                // 返回的是parent给定的参数类型，可能为多个
+                // return 'Exact Number'    # 错误，// 返回的是parent给定的参数类型，可能为多个
                 return undefined
             }
             const criterionName = nestedCriterion[0]
@@ -820,7 +951,7 @@ export default function CriteriaBuilder(props) {
     }
     const handleClearSelected = () => {
         const requiredType = getRequiredReturnTypeOfSelected();
-        const replaceItem = requiredType.indexOf('Exact Number') >= 0 ? [''] : []
+        const replaceItem = requiredType.indexOf('Exact Number') >= 0 ? [exactInputId] : []
         handleInsertCriterion(replaceItem);
     }
     useEffect(() => {
@@ -846,10 +977,10 @@ export default function CriteriaBuilder(props) {
     const handleNameInputKeyUp = (e) => {
         setCriterionNameExists(false);
     }
-    const validateCriterionParamType = (nestedCriterion, forbiddenId = undefined, finalType = undefined) => {  //不检查empty和empty input， paramType就报错, 
+    const validateCriterionParamType = (nestedCriterion, forbiddenId = undefined, finalType = undefined, checkExactInput=false) => {  //不检查empty和empty input， paramType就报错, 
         // Return: True if valid else false
         // forbiddenId: used for check self-reference
-        const res = checkParamType(nestedCriterion, forbiddenId, finalType) // checkParamType要用[]外层包裹
+        const res = checkParamType(nestedCriterion, forbiddenId, finalType, checkExactInput) // checkParamType要用[]外层包裹
         if (res.status === 'Error') {
             wanrInvalidCriterion(res);
             return false
@@ -859,6 +990,14 @@ export default function CriteriaBuilder(props) {
     }
     const validateCriterionEmpty = nestedCriterion => {
         let checkRes = checkEmpty(nestedCriterion);
+        if (checkRes.status === 'Error') {
+            wanrInvalidCriterion(checkRes)
+            return false
+        }
+        return true
+    }
+    const validateCriterionExactNumberInput = nestedCriterion => {
+        let checkRes = checkExactNumberInput(nestedCriterion);
         if (checkRes.status === 'Error') {
             wanrInvalidCriterion(checkRes)
             return false
@@ -916,7 +1055,7 @@ export default function CriteriaBuilder(props) {
                             />
                         </Space>
 
-                        <div><span style={{color: 'red'}}>* </span><b>Final Criterion:</b></div>
+                        <div><span style={{ color: 'red' }}>* </span><b>Final Criterion:</b></div>
                         <div>
                             {stringfyCriterion(finalNestedCriterion)}
                             <EditOutlined className='my-action-tag'
@@ -1013,7 +1152,7 @@ export default function CriteriaBuilder(props) {
                                 </Space>
                                 {/* <button onClick={() => { validateCriterionParamType(nestedBuilidingCriterion, editingCriterionId) }} type='button'>Validate</button> */}
                                 <div >
-                                    <input checked={toolTips} style={{ cursor: 'pointer' }} onChange={() => { setToolTips(!toolTips); console.log(toolTips) }} type="checkbox" />
+                                    <input checked={toolTips} style={{ cursor: 'pointer' }} onChange={() => { setToolTips(!toolTips);}} type="checkbox" />
                                     &nbsp;tool tips
                                 </div>
 

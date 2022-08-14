@@ -69,7 +69,7 @@ export default function BacktestReport(props) {
     const [clickedIndex, setClickedIndex] = useState(undefined);
     const handleChartValueClick = (index) => {
         setClickedIndex(index);
-        console.log(index)
+        // console.log(index)
     }
 
     // **Better Not Use?? 'to prevent ONLY EXPENSIVE COMPUTATION, NOT to prevent re-render(may lead to bugs)'

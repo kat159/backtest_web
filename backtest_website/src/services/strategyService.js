@@ -1,8 +1,5 @@
-// import criterionService from "./criterionService";  // 有了这个就不能被外部import了，为什么？？
-// 可能是因为import的原因？  换require可能就可以
-// const criterionService = require('./criterionService')
-const axios = require('axios')
-const moment = require('moment')
+import axios from 'axios';
+import moment from 'moment';
 
 const baseURL = 'http://127.0.0.1:3000/strategies';
 
@@ -124,4 +121,4 @@ class StrategyService {
 
 }
 
-module.exports = new StrategyService();
+export default new StrategyService();

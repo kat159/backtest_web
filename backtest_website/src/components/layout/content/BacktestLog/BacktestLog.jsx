@@ -14,6 +14,7 @@ export default function BacktestLog() {
       title: 'Date',
       dataIndex: 'date',
       key: 'date',
+      sorter: (a, b) => a.date < b.date ? -1 : a.date === b.date ? 0 : 1
     },
     {
       title: 'Tested Strategy',
@@ -28,33 +29,25 @@ export default function BacktestLog() {
           title: 'Return Rate%',
           dataIndex: 'returnRate',
           key: 'returnRate',
-          sorter: {
-            multiple: true
-          },
+          sorter: (a, b) => a.returnRate - b.returnRate
         },
         {
           title: 'Max Drawdown%',
           dataIndex: 'maxDrawdown',
           key: 'maxDrawdown',
-          sorter: {
-            multiple: true
-          },
+          sorter: (a, b) => a.maxDrawdown - b.maxDrawdown
         },
         {
           title: 'Sharpe Ratio',
           dataIndex: 'sharpe',
           key: 'sharpe',
-          sorter: {
-            multiple: true
-          },
+          sorter: (a, b) => a.sharpe - b.sharpe
         },
         {
           title: 'Standard Deviation',
           dataIndex: 'standardDeviation',
           key: 'standardDeviation',
-          sorter: {
-            multiple: true
-          },
+          sorter: (a, b) => a.standardDeviation - b.standardDeviation
         }
       ]
     },

@@ -1,4 +1,4 @@
-const axios = require('axios')
+import axios from "axios";
 
 const baseURL = 'http://127.0.0.1:3000';
 
@@ -28,4 +28,4 @@ class UserService {
     }
 }
 
-module.exports = new UserService();
+export default new UserService();
