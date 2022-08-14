@@ -11,6 +11,8 @@ var backtestRouter = require('./routes/backtest');
 var strategiesRouter = require('./routes/strategies');
 var criteriaRouter = require('./routes/criteria');
 var backtestLogsRouter = require('./routes/backtestLog');
+var indicatorsRouter = require('./routes/indicators')
+var stocksRouter = require('./routes/stocks');
 
 var app = express();
 
@@ -32,11 +34,22 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/users', usersRouter);
-app.use('/backtest', backtestRouter);
-app.use('/strategies', strategiesRouter);
-app.use('/criteria', criteriaRouter);
-app.use('/backtest_logs', backtestLogsRouter);
+app.use('/server/users', usersRouter);
+app.use('/server/backtest', backtestRouter);
+app.use('/server/strategies', strategiesRouter);
+app.use('/server/criteria', criteriaRouter);
+app.use('/server/backtest_logs', backtestLogsRouter);
+app.use('/server/indicators', indicatorsRouter);
+app.use('/server/stocks', stocksRouter);
+
+app.use(express.static(path.join(__dirname, 'build')));
+
+// 之前的router没有触发next()，一旦上面路由满足，这个get不会触发
+app.get('/*', function (req, res) {
+  console.log(1111111)
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

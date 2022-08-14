@@ -2,11 +2,11 @@ import axios from 'axios';
 import {DATE_FORMAT_BACKEND} from '../config/config'
 import criterionService from './criterionService';
 
-const baseURL = 'http://127.0.0.1:5000';
+const baseURL = 'http://127.0.0.1:3000/server';
 
 class BacktestService {
     async runTest(data) {
-        return axios({
+        const res = await axios({
             method: 'post',
             url: baseURL + '/backtest',
             data: data,
@@ -14,6 +14,7 @@ class BacktestService {
                 'Content-Type': 'application/json',
             },
         })
+        return res
     }
     async formDataToBackendFormat(values) {
         const userId = localStorage.getItem('userId');

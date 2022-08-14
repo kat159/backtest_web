@@ -1,7 +1,7 @@
 import axios from 'axios';
 import moment from 'moment';
 
-const baseURL = 'http://127.0.0.1:3000/strategies';
+const baseURL = 'http://127.0.0.1:3000/server/strategies';
 
 const backendDateFormat = 'YYYY-MM-DD'
 const frontendDateFormat = 'YYYY/MM/DD'
