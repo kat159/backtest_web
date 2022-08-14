@@ -22,7 +22,7 @@ var cors = require('cors');
 app.use(cors());
 
 // initialize database
-// db.initDB();
+db.initDB();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
