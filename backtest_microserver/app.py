@@ -77,6 +77,7 @@ def get_stock():
     body = request.get_json()
     request_stock_symbols = \
         body['stockSymbols'] if 'stockSymbols' in body else []
+    print(request_stock_symbols)
     time_period_timestamp = body['timePeriods'] if 'timePeriods' in body else [
         0, float('inf')]
     res = [

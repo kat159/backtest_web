@@ -29,3 +29,8 @@ forever start server/bin/www
 
 
 forever start -c python3 app.py
+
+
+curl localhost:5000
+
+git clone git@github.com/kat159/backtest_web.git
