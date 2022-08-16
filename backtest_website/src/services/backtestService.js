@@ -1,8 +1,8 @@
 import axios from 'axios';
 import {DATE_FORMAT_BACKEND} from '../config/config'
 import criterionService from './criterionService';
-
-const baseURL = 'http://127.0.0.1:3000/server';
+import { SERVER_IP } from '../config/config';
+const baseURL = SERVER_IP + '/server';
 
 class BacktestService {
     async runTest(data) {

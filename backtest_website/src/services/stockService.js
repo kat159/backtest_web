@@ -1,6 +1,7 @@
 import axios from "axios";
+import { SERVER_IP } from '../config/config';
 
-const baseURL = 'http://127.0.0.1:3000/server/stocks';
+const baseURL = SERVER_IP + '/server/stocks';
 
 class StockService {
     async getBySymbols(symbols=[], timePeriod=undefined) {

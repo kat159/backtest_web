@@ -1,9 +1,6 @@
-from asyncio import constants
 from unicodedata import name
 from flask import Flask, render_template, json, request
-from flask_mysqldb import MySQL
 import os
-import db_connector as db
 from flask_cors import CORS, cross_origin
 from test import formula_executor, run_test, signals, test_one_stock
 from stock import *
@@ -100,4 +97,4 @@ def get_stock():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

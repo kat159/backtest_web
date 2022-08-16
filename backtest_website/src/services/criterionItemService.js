@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { SERVER_IP } from '../config/config';
 
-const baseURL = 'http://127.0.0.1:3000/server/criteria_item';
+const baseURL = SERVER_IP + '/server/criteria_item';
 // paramTypes: ['Number', 'Exact Number', 'Bool', 'Integer'] // 
 // paramTypes 允许Number，那么就应该允许Integer, 因为Exact Number肯定要被带入函数变成Series， 所以Integer肯定会是Series
 // paramTypes 允许 Exact， 就该允许Integer

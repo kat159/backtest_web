@@ -42,13 +42,12 @@ app.use('/server/backtest_logs', backtestLogsRouter);
 app.use('/server/indicators', indicatorsRouter);
 app.use('/server/stocks', stocksRouter);
 
-app.use(express.static(path.join(__dirname, 'build')));
-
-// 之前的router没有触发next()，一旦上面路由满足，这个get不会触发
-app.get('/*', function (req, res) {
-  console.log(1111111)
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
+// app.use(express.static(path.join(__dirname, 'build')));
+// // 之前的router没有触发next()，一旦上面路由满足，这个get不会触发
+// app.get('/*', function (req, res) {
+//   console.log(1111111)
+//   res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// });
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

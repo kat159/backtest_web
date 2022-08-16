@@ -12,3 +12,5 @@
 
 ![image](https://user-images.githubusercontent.com/61893117/151545486-62875784-0637-466d-9697-203d8df494a4.png)
 
+
+ProxyCommand ssh -q -x -i "backtest4.pem" ubuntu@ec2-52-207-221-112.compute-1.amazonaws.com -W %h:22

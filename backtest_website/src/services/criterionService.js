@@ -1,7 +1,8 @@
 import axios from 'axios';
 import criterionItemService from './criterionItemService';
+import { SERVER_IP } from '../config/config';
 
-const baseURL = 'http://127.0.0.1:3000/server/criteria';
+const baseURL = SERVER_IP + '/server/criteria';
 
 const {itemDict} = criterionItemService.getAll()
 

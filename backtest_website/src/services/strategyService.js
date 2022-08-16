@@ -1,7 +1,8 @@
 import axios from 'axios';
 import moment from 'moment';
+import { SERVER_IP } from '../config/config';
 
-const baseURL = 'http://127.0.0.1:3000/server/strategies';
+const baseURL = SERVER_IP + '/server/strategies';
 
 const backendDateFormat = 'YYYY-MM-DD'
 const frontendDateFormat = 'YYYY/MM/DD'

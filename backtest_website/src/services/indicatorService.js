@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { SERVER_IP } from '../config/config';
 
-const baseURL = 'http://127.0.0.1:3000/server/indicators';
+const baseURL = SERVER_IP + '/server/indicators';
 
 class indicatorService {
     async calculateByFormula(symbol, formula) {

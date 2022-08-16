@@ -2,7 +2,8 @@ import strategyService from './strategyService';
 import axios from 'axios';
 import {DATE_FORMAT_BACKEND} from '../config/config'
 import moment from 'moment';
-const baseURL = 'http://127.0.0.1:3000/server/backtest_logs';
+import { SERVER_IP } from '../config/config';
+const baseURL = SERVER_IP + '/server/backtest_logs';
 
 class BacktestLogService {
     async add(data) {

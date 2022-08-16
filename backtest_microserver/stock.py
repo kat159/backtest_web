@@ -20,7 +20,8 @@ class Stock:
         self.timestamp = []
         self.date_to_close = {}
         # TODO: try catch
-        f = open(path)
+        f = open(path, encoding='latin1')
+        # f = open(path)    # stock data 第一行中文不是utf-8，linux报错
         l = f.readline()
         title = re.split('\s', l.strip())
         
@@ -58,7 +59,8 @@ def get_all_stocks(path: str):
     d = {}
     
     for file in files:
-        stock = Stock(path + '\\' + file)
+        stock = Stock(path + '/' + file)
+        # stock = Stock(path + '\\' + file)     # linux会报错
         d[stock.symbol] = stock
     return d
 
