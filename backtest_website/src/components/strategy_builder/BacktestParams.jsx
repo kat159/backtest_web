@@ -49,6 +49,9 @@ export default function BacktestParams(props) {
                     {
                         message: 'Must Be Integer',
                         validator: (_, value) => {
+                            if (value === undefined) {
+                                return Promise.resolve();
+                            }
                             value = value.toString();
                             if (value.indexOf('.') === -1) {
                                 return Promise.resolve();
@@ -78,6 +81,9 @@ export default function BacktestParams(props) {
                     {
                         message: 'Number from 0 to 100',
                         validator: (_, value) => {
+                            if (value === undefined) {
+                                return Promise.resolve();
+                            }
                             value = value.toString();
                             if (parseFloat(value) > 100 || parseFloat(value) < 0) {
                                 return Promise.reject('');
@@ -98,6 +104,9 @@ export default function BacktestParams(props) {
                     {
                         message: 'Number from 0 to 100',
                         validator: (_, value) => {
+                            if (value === undefined) {
+                                return Promise.resolve();
+                            }
                             value = value.toString();
                             if (parseFloat(value) > 100 || parseFloat(value) < 0) {
                                 return Promise.reject('');

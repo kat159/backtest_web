@@ -5,7 +5,7 @@ import criterionService from '../../../../services/criterionService';
 import CriteriaBuilder from '../../popup/CriteriaBuilder';
 import PubSub from 'pubsub-js';
 import CriteriaTable from './CriteriaTable';
-import { Button, Input, Space } from 'antd';
+import { Button, Input, message, Space } from 'antd';
 
 export default function MyCriteria() {
     const userId = localStorage.getItem('userId');
@@ -19,9 +19,7 @@ export default function MyCriteria() {
     const [isEditingCriterion, setIsEditingCriterion] = useState(false)
 
     useEffect(() => {
-        
         retrieveCriterionData();
-
         const token = PubSub.subscribe(onEditBottunClickMsg, (msg, data) => {
             // console.log('EDIT BUTTON:', data)
             const { criterionId, nestedCriterion, criterionName } = data
@@ -34,13 +32,17 @@ export default function MyCriteria() {
         })
         const token2 = PubSub.subscribe(onDeleteButtonClickMsg, (msg, data) => {
             const { criterionId, } = data;
-            // console.log('DELETE BUTTON:', criterionId)
-            criterionService.deleteById(criterionId).then(
-                res => {
-                    // console.log('Delete Result:', res)
-                    retrieveCriterionData();
-                }
-            )
+            if (criterionId === 30 || criterionId === 31) {
+                message.error('Can not delete Sample Criterion of guest.')
+            } else {
+                // console.log('DELETE BUTTON:', criterionId)
+                criterionService.deleteById(criterionId).then(
+                    res => {
+                        // console.log('Delete Result:', res)
+                        retrieveCriterionData();
+                    }
+                )
+            }
         })
         return () => {
             PubSub.unsubscribe(token)

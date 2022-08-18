@@ -5,11 +5,21 @@ import BacktestParams from './BacktestParams';
 import PositionClose from './PositionClose';
 import PositionOpen from './PositionOpen';
 import moment from 'moment';
+import { useEffect } from 'react';
 const dateFormat = 'YYYY/MM/DD';
 
 export default function StrategeyBuilder(props) {
 
-  const {formRef, form, initialValues} = props;
+  const {formRef, form, initialValues, defaultValues} = props;
+
+  useEffect(() => {
+    if (defaultValues) {
+      const userId = localStorage.getItem('userId')
+      if (userId === '7') {
+        form.setFieldsValue(defaultValues)
+      }
+    }
+  }, [])
 
   const showInput = () => {
     // console.log(form.getFieldsValue());
@@ -28,9 +38,6 @@ export default function StrategeyBuilder(props) {
         wrapperCol={{
           span: 16,
         }}
-        initialValues={ 
-          {}
-        }
       >
         <BacktestParams dateFormat={dateFormat} />
         <PositionOpen form={form} formRef={formRef} />

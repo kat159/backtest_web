@@ -28,7 +28,7 @@ export default function MetricsTable(props) {
         // **!!Not working in some brower like IE
         return camelCaseName
             .replace(/([A-Z])/g, ' $1')  // insert a space before all caps
-            .replace(/^./, str => str.toUpperCase());     // uppercase the first char
+            .replace(/^./, str => str.toUpperCase()) + (camelCaseName === 'returnRate' ? ' %' : '');     // uppercase the first char
     }
 
     const columns = Object.keys(metrics).map(metricName => {

@@ -29,8 +29,13 @@ forever start server/bin/www
 
 
 forever start -c python3 app.py
-
+pm2 start app.py --interpreter python3
 
 curl localhost:5000
 
 git clone git@github.com/kat159/backtest_web.git
+
+# transfer file from local to ec2
+# 不要用home/ubuntu,自动添加了
+# scp -i proxy-jump.pem -r ./stock_data ubuntu@ec2-3-95-186-234.compute-1.amazonaws.com:backtest_microserver/stock_data
+scp -i proxy-jump.pem -r ./stock_data ubuntu@ec2-3-95-186-234.compute-1.amazonaws.com:backtest_microserver

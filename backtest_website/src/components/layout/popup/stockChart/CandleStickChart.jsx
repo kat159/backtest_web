@@ -161,7 +161,7 @@ class CandleStickStockScaleChartWithVolumeBarV3 extends React.Component {
                     ) 
                     // + (index === 0 ? 0 : pixelWitdh('Edit ', { size: 11 }))
                   )
-                  textSimulator += name + '   L0' + new Array(vairableTickDemical ?? tickDemical).fill(0).join('')
+                  textSimulator += name + '   L000' + new Array(vairableTickDemical ?? tickDemical).fill(0).join('')
 
                   return <SingleValueTooltip
                     key={nanoid()}

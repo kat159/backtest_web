@@ -44,6 +44,8 @@ export default function LoginPage() {
             className="login-form"
             initialValues={{
                 remember: true,
+                username: 'guest',
+                password: 'guest'
             }}
             onFinish={onFinish}
         >

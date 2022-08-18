@@ -4,9 +4,9 @@ import { nanoid } from 'nanoid'
 import React, { useState } from 'react'
 
 export default function PositionStatusTable(props) {
-    const { testReport, curIndex = 0, handleOpenStockChart } = props
+    const { testReport, curIndex, handleOpenStockChart } = props
     const dailyReport = testReport.daily_test_report
-    const curDayReport = dailyReport[curIndex]
+    const curDayReport = dailyReport[curIndex === undefined ? Math.min(25, dailyReport.length) : curIndex]
     curDayReport.key = nanoid()
     // console.log(curDayReport)
     const columns = [

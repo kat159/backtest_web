@@ -84,6 +84,7 @@ export default function CriteriaBuilder(props) {
         const initializeCriterion = async () => {
             if (criterionBeingEdited) {
                 const data = await criterionService.getCriterionById(criterionBeingEdited.criterionId);
+                // console.log(data)
                 setInitialCriterion(data)
                 const { criterion_arr, temporary_criterion_list, name } = data
                 setTemporaryCriterionList(temporary_criterion_list)
@@ -764,6 +765,10 @@ export default function CriteriaBuilder(props) {
         if (criterionBeingEdited) { // editing
             // console.log('Editing Criterion Click...', criterionBeingEdited)
             const { criterionId, } = criterionBeingEdited
+            if (criterionId === 30 || criterionId === 31) {
+                message.error('Can not change Sample Criterion of guest.')
+                return
+            }
             const { data } = await criterionService.updateCriterion(
                 criterionId, userId, nameInputRef.current.input.value,
                 criterionStr, finalNestedCriterion, temporaryCriterionList,
@@ -977,7 +982,7 @@ export default function CriteriaBuilder(props) {
     const handleNameInputKeyUp = (e) => {
         setCriterionNameExists(false);
     }
-    const validateCriterionParamType = (nestedCriterion, forbiddenId = undefined, finalType = undefined, checkExactInput=false) => {  //不检查empty和empty input， paramType就报错, 
+    const validateCriterionParamType = (nestedCriterion, forbiddenId = undefined, finalType = undefined, checkExactInput = false) => {  //不检查empty和empty input， paramType就报错, 
         // Return: True if valid else false
         // forbiddenId: used for check self-reference
         const res = checkParamType(nestedCriterion, forbiddenId, finalType, checkExactInput) // checkParamType要用[]外层包裹
@@ -1152,7 +1157,7 @@ export default function CriteriaBuilder(props) {
                                 </Space>
                                 {/* <button onClick={() => { validateCriterionParamType(nestedBuilidingCriterion, editingCriterionId) }} type='button'>Validate</button> */}
                                 <div >
-                                    <input checked={toolTips} style={{ cursor: 'pointer' }} onChange={() => { setToolTips(!toolTips);}} type="checkbox" />
+                                    <input checked={toolTips} style={{ cursor: 'pointer' }} onChange={() => { setToolTips(!toolTips); }} type="checkbox" />
                                     &nbsp;tool tips
                                 </div>
 

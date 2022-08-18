@@ -9,6 +9,9 @@ const frontendDateFormat = 'YYYY/MM/DD'
 
 class StrategyService {
     async getAll(userId) {
+        if (!userId) {
+            userId = localStorage.getItem('userId')
+        }
         return axios({
             method: 'get',
             url: baseURL,

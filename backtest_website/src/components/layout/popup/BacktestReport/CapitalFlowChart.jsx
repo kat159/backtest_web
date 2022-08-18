@@ -10,6 +10,7 @@ import {
     Legend,
 } from 'chart.js';
 import { Line, getElementAtEvent, } from 'react-chartjs-2';
+import { element } from 'prop-types';
 
 ChartJS.register(
     CategoryScale,
@@ -61,10 +62,13 @@ export default function CapitalFlowChart(props) {
         radius: 0,                   // point半径
         onClick: (event, element) => {      // element为intersect的point
             if (element.length > 0) {
+                console.log(element[0].index)
                 handleChartValueClick(element[0].index);
             }
-        }
-        
+        },
+        // onHover: (event, element) => {
+        //     handleChartValueClick(element[0].index);
+        // }
     };
 
 

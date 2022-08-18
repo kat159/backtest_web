@@ -117,7 +117,7 @@ export default function CriterionSearchInput(props) {
         return async (event) => {
             event.stopPropagation();
             const res = await criterionService.getCriterionById(criterion.criterionId);
-            setCriterionEditing({ criterionId: res.id, criterionName: res.name, nestedCriterion: res.criterion_arr });
+            setCriterionEditing({ criterionId: res.id, criterionName: res.name, nestedCriterion: res.criterion_arr, description: res.description });
         }
     }
 

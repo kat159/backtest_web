@@ -1,8 +1,9 @@
-import { Button, message, Space, Popconfirm } from 'antd'
+import { Button, message, Space, Popconfirm, Spin } from 'antd'
 import { useForm } from 'antd/lib/form/Form'
 import moment from 'moment'
 import React from 'react'
 import { useState } from 'react'
+import { useEffect } from 'react'
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import backtestService from '../../../../services/backtestService'
@@ -10,8 +11,6 @@ import criterionService from '../../../../services/criterionService'
 import strategyService from '../../../../services/strategyService'
 import StrategeyBuilder from '../../../strategy_builder/StrategeyBuilder'
 import BacktestReport from '../../popup/BacktestReport/BacktestReport'
-import DraggablePoppup from '../../popup/DraggablePoppup'
-import StrategySearchSelector from './StrategySearchSelector'
 
 export default function Backtest() {
   const formRef = useRef(null)
@@ -21,6 +20,13 @@ export default function Backtest() {
   const [displayingReport, setDisplayingReport] = useState(false)
   const [testReport, setTestReport] = useState(undefined)
   const [curStrategyId, setCurStrategyId] = useState(undefined);
+
+  useEffect(() => {
+    if (userId === '7') {
+      form.setFieldsValue(sampleStrategy)
+    }
+  }, [])
+
   const handleSave = () => {
     form.validateFields().then(
       values => {
@@ -44,7 +50,6 @@ export default function Backtest() {
         )
       },
       err => {
-
       }
     )
   }
@@ -79,16 +84,17 @@ export default function Backtest() {
     }
     return data
   }
+  const [showRunningTest, setShowRunningTest] = useState(false)
   const handleRunTest = async () => {
     try {
       const values = await form.validateFields()
       setDisplayingReport(true)
+      setShowRunningTest(true)
       const res = await backtestService.runTestWithFormData(values);
+      setShowRunningTest(false)
       setTestReport({...res.data, strategy: values})
     } catch(err) {
-
     }
-    
   }
 
   const handleReset = (e) => {
@@ -99,19 +105,30 @@ export default function Backtest() {
     nav('/my_strategies',{replace: true});
   }
   const sampleStrategy = {
-    timePeriod: [moment('2010/01/01', dateFormat), moment('2020/01/01', dateFormat)],
+    timePeriod: [moment('2010/03/23', dateFormat), moment('2021/11/01', dateFormat)],
     positionType: 'Long',
-    holdingDays: 1,
-    capital: 10000,
-    capitalAtRisk: 5,
-    commission: 0.08,
-    bidAskSpread: 0.02,
+    holdingDays: 5,
+    capital: 1000000,
+    capitalAtRisk: 20,
+    commission: 0.02,
+    bidAskSpread: 0.01,
     openCriteriaLogic: 'and',
     closeCriteriaLogic: 'and',
+    openCriteriaIdList: userId === '7' ? [30] : undefined,
+    closeCriteriaIdList: userId === '7' ? [31] : undefined
   }
   return (
     <div >
       {
+        showRunningTest ? <Spin
+        size='large'
+        tip='Running Test...'
+        style={{
+          position: 'absolute',
+          top: '30%',
+          left: '30%'
+        }}
+      /> :
         testReport ? <BacktestReport 
         strategy={form.getFieldsValue(true)} 
         strategyId={curStrategyId} 

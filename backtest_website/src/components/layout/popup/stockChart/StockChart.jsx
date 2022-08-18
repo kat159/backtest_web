@@ -94,8 +94,6 @@ export default function StockChart(props) {
                 data: [],        // **TODO：交给stock chart之前就fetch好，每次外部某个indicator参数改变，只重新fetch参数改变的那个indicator，不然indicators参数一改，stockChart就要重新全部fetch
                 vairableTickDemical: 2,
             },
-            
-            
         ],
     }
     useEffect(() => {

@@ -10,7 +10,7 @@ export default function PositionOpen(props) {
         <div>
             <legend style={{paddingLeft: '20px', fontSize: '20px'}}><b>Position Opening Criteria</b></legend>
             <CriterionSearchInput form={props.form} formRef={props.formRef} name="openCriteriaIdList" />
-            <Form.Item label='All criteria in login condiction' name='openCriteriaLogic'
+            <Form.Item label='All criteria in logic condition' name='openCriteriaLogic'
             >
                 <Radio.Group >
                     <Radio value='and'>and</Radio>
