@@ -2,7 +2,8 @@ from typing import *
 import re
 import os
 import pandas as pd
-from date import * 
+from utils.date import *
+
 
 class Stock:
     def __init__(self, path: str) -> None:
@@ -24,9 +25,9 @@ class Stock:
         # f = open(path)    # stock data 第一行中文不是utf-8，linux报错
         l = f.readline()
         title = re.split('\s', l.strip())
-        
+
         self.symbol, self.name, self.time_period, self.split_adjust \
-                = title[0], ''.join(title[1:len(title)-2]), title[-2], title[-1]
+            = title[0], ''.join(title[1:len(title) - 2]), title[-2], title[-1]
         f.readline()
         while 1:
             l = f.readline()
@@ -53,12 +54,13 @@ class Stock:
         self.timestamp = pd.Series(self.timestamp)
         self.date_to_close = dict(zip(self.date, self.close))
         f.close()
-        
+
+
 def get_all_stocks(path: str):
     files = os.listdir(path)
     d = {}
-    
-    for file in files:
+
+    for file in files[:5]:
         stock = Stock(path + '/' + file)
         # stock = Stock(path + '\\' + file)     # linux会报错
         d[stock.symbol] = stock
