@@ -4,8 +4,7 @@ from .my_typing import *
 
 def macd(close: Series[Number], short: PosInt = 12, long: PosInt = 26, m: PosInt = 9) -> Series[Number]:
     dif = ema(close, short) - ema(close, long)
-    dea = ema(dif, m)
-    return round(dif), round(dea)
+    return round(dif)
 
 
 def macd_signal(close: Series[Number], short: PosInt = 12, long: PosInt = 26, m: PosInt = 9) -> Series[Number]:
@@ -38,7 +37,7 @@ def kdj_j(close: Series[Number], high: Series[Number], low: Series[Number], n: P
     return j
 
 
-def bljj(close, high, low):
+def bljj(close: Series[Number], high: Series[Number], low: Series[Number]) -> Series[Number]:
     def helper(close, high, low, close_weight, high_weight, low_weight,
                first_ema_params,
                accuracy,

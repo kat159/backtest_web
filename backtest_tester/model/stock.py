@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import *
 import re
 import os
@@ -19,7 +20,6 @@ class Stock:
         self.volume = []
         self.turn_volume = []
         self.timestamp = []
-        self.date_to_close = {}
         # TODO: try catch
         f = open(path, encoding='latin1')
         # f = open(path)    # stock data 第一行中文不是utf-8，linux报错
@@ -28,6 +28,7 @@ class Stock:
 
         self.symbol, self.name, self.time_period, self.split_adjust \
             = title[0], ''.join(title[1:len(title) - 2]), title[-2], title[-1]
+        self.name = self.name.encode('latin1').decode('gb2312').encode('utf-8').decode('utf-8')
         f.readline()
         while 1:
             l = f.readline()
@@ -44,15 +45,14 @@ class Stock:
             self.close.append(float(data[4]))
             self.volume.append(float(data[5]))
             self.turn_volume.append(float(data[6]))
-        self.close = pd.Series(self.close)
-        self.open = pd.Series(self.open)
-        self.high = pd.Series(self.high)
-        self.low = pd.Series(self.low)
-        self.volume = pd.Series(self.volume)
-        self.turn_volume = pd.Series(self.turn_volume)
-        self.date = pd.Series(self.date)
-        self.timestamp = pd.Series(self.timestamp)
-        self.date_to_close = dict(zip(self.date, self.close))
+        # self.close = pd.Series(self.close)
+        # self.open = pd.Series(self.open)
+        # self.high = pd.Series(self.high)
+        # self.low = pd.Series(self.low)
+        # self.volume = pd.Series(self.volume)
+        # self.turn_volume = pd.Series(self.turn_volume)
+        # self.date = pd.Series(self.date)
+        # self.timestamp = pd.Series(self.timestamp)
         f.close()
 
 

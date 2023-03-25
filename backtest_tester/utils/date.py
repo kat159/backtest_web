@@ -1,13 +1,17 @@
 from datetime import *
 
+
 def to_date(date, format='%Y/%m/%d'):
     return datetime.strptime(date, format).date()
+
 
 def next_day(date):
     return date + timedelta(days=1)
 
+
 def add_days(date, day):
     return date + timedelta(days=day)
+
 
 if __name__ == '__main__':
     d1 = '2020-01-01'

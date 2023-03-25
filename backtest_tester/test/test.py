@@ -28,5 +28,6 @@ class MyTestCase(unittest.TestCase):
 
         print(third_last_idx)
 
+
 if __name__ == '__main__':
     unittest.main()

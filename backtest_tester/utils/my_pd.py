@@ -1,98 +1,262 @@
+import builtins
 import collections
 import inspect
 import types
 import numpy as np
 import pandas as pd
-from .my_typing import *
+from utils.my_typing import *
 from typing import *
 
+"""
+    In the following functions: 
+        1. pandas.Series is used as just a consecutive array
+             a. index will not lost and order of index will not change
+             b. if a Series has lost index or index order changed(like by s[::-1], 
+                    before calling function, convert it to a array with consecutive ascending index first 
+        2. careful about if_else:
+            s1 = [np.nan, 1, 10,  2]
+            s2 = [2,      5,  3, np.nan]
+            if_else(s1 > s2, s1, s2) -> [np.nan, 5, 10, 2]  # last nan of s2 might not be expected
+            if_else(s1 > s2, s1, if_else(s1 <= s2, s2, np.nan)) -> [np.nan, 5, 10, np.nan]
+            
+"""
 
-@type_check
-def shift(s: Series[All], n: Integer = 1) -> types.MappingProxyType[tuple[int] | str, int]({
-    'default': Series[All],
-}):
-    res = s.shift(n)
-    if s.dtype == 'bool':
-        res = s.fillna(False)
-    return res
 
-
-def add(s1: Number | Series[Number], s2: Number | Series[Number]) -> Number | Series[Number]:
+def add(s1: Number | Series[Number],
+        s2: Number | Series[Number]) -> Number | Series[Number]:
     return s1 + s2
 
 
-def minus(s1: Number | Series[Number], s2: Number | Series[Number]) -> Number | Series[Number]:
+def minus(s1: Number | Series[Number],
+          s2: Number | Series[Number]) -> Number | Series[Number]:
     return s1 - s2
 
 
-def multiply(s1: Number | Series[Number], s2: Number | Series[Number]) -> Number | Series[Number]:
+def multiply(s1: Number | Series[Number],
+             s2: Number | Series[Number]) -> Number | Series[Number]:
     return s1 * s2
 
 
-def divide(s1: Number | Series[Number], s2: Number | Series[Number]) -> Number | Series[Number]:
+def divide(s1: Number | Series[Number],
+           s2: Number | Series[Number]) -> Number | Series[Number]:
     return s1 / s2
 
 
-def round(s: Series[Number], n: Integer = 2) -> Series[Number]:
-    return s.round(n)
+def round(s: Number | Series[Number],
+          n: NonNegInt = 2) -> Number | Series[Number]:
+    if isinstance(s, pd.Series):
+        if n == 0:
+            return s.round(0).astype('Int64')
+        return s.round(n)
+    return builtins.round(s, n)
 
 
-def abs(s: Series[Number]) -> Series[Number]:
-    return s.abs()
+def abs(s: Series[Number]) -> Number | Series[Number]:
+    if isinstance(s, pd.Series):
+        return s.abs()
+    return builtins.abs(s)
 
 
-def max(s1: Series[Number], s2: Series[Number]) -> Series[Number]:
-    return pd.Series(np.maximum(s1, s2), index=s1.index)
+def max(s1: Series[Number] | Number,
+        s2: Series[Number] | Number) -> Series[Number] | Number:
+    if isinstance(s1, pd.Series) or isinstance(s2, pd.Series):
+        return pd.Series(np.maximum(s1, s2))
+    return builtins.max(s1, s2)
 
 
-def min(s1: Series[Number], s2: Series[Number]) -> Series[Number]:
-    return pd.Series(np.minimum(s1, s2), index=s1.index)
+def min(s1: Series[Number] | Number,
+        s2: Series[Number] | Number) -> Series[Number] | Number:
+    if isinstance(s1, pd.Series) or isinstance(s2, pd.Series):
+        return pd.Series(np.minimum(s1, s2))
+    return builtins.min(s1, s2)
 
 
-def ago(s: Series[All], n: PosInt = 1) -> Series[All]:
-    return s.shift(n)
+def and_(s1: Series[Bool], s2: Series[Bool]) -> Series[Bool]:
+    return s1 & s2
 
 
-def diff_over_periods(s: Series[Number], n: PosInt = 1) -> Series[Number]:
-    return s.diff(n)
+def or_(s1: Series[Bool], s2: Series[Bool]) -> Series[Bool]:
+    return s1 | s2
 
 
-def std(s: Series[Number], n: PosInt) -> Series[Number]:
-    return s.rolling(n).std(ddof=0)
+def higher(s1: Series[Number] | Number, s2: Series[Number] | Number) -> Series[Bool] | Bool:
+    return s1 > s2
 
 
-def if_else(s_bool: Series[Bool], s_true: Series[All], s_false: Series[All]) -> Series[All]:
+def lower(s1: Series[Number] | Number, s2: Series[Number] | Number) -> Series[Bool] | Bool:
+    return s1 < s2
+
+
+def cross_above(s1: Series[Number], s2: Series[Number]) -> Series[Bool]:
+    cross_bool = s1 > s2
+    count_bool = count_over_periods(cross_bool, 2) == 1
+    return count_bool * cross_bool
+
+
+def cross_below(s1: Series[Number], s2: Series[Number]) -> Series[Bool]:
+    cross_bool = s1 <= s2
+    count_bool = count_over_periods(cross_bool, 2) == 1
+    return count_bool * cross_bool
+
+
+def sum_over_periods(s: Series[Number],
+                     n: Series[PosInt] | PosInt) -> Series[Number]:
+    """
+        if n is positive integer: sum of last n periods(include current period)
+        if n is positive integer series: sum of last n[i] periods(include current period) of each period i
+    """
+    if not isinstance(n, pd.Series):
+        # return s.rolling(n).sum(skipna=True)  # skipna not work in rolling().sum()
+        return s.rolling(n, min_periods=n).sum()  # min_periods = min number of non-nan values in the window
+    if isinstance(n, pd.Series):
+        return pd.Series(
+            map(
+                lambda v, i: s.iloc[builtins.max(0, i - v + 1): i + 1].sum(skipna=False) if not pd.isnull(
+                    v) and i - v + 1 >= 0 else np.nan,
+                n,
+                n.index
+            )
+        )
+
+
+def count_over_periods(s_bool: Series[Bool], n: PosInt | Series[PosInt]) -> Series[NonNegInt]:
+    return sum_over_periods(s_bool, n)
+
+
+def max_over_periods(s: Series[Number],
+                     n: PosInt | Series[PosInt]) -> Series[Number]:
+    """
+        if n is positive integer: max of last n periods(include current period)
+        if n is positive integer series: max of last n[i] periods(include current period) of each period i
+    """
+    if not isinstance(n, pd.Series):
+        return s.rolling(n, min_periods=n).max()
+    return pd.Series(
+        map(
+            lambda v, i: s.iloc[builtins.max(0, i - v + 1): i + 1].max(skipna=False) if not pd.isnull(
+                v) and i - v + 1 >= 0 else np.nan,
+            n,
+            n.index
+        )
+    )
+
+
+def min_over_periods(s: Series[Number],
+                     n: PosInt | Series[PosInt]) -> Series[Number]:
+    """
+        if n is positive integer: min of last n periods(include current period)
+        if n is positive integer series: min of last n[i] periods(include current period) of each period i
+    """
+    if not isinstance(n, pd.Series):
+        return s.rolling(n, min_periods=n).min()
+    return pd.Series(
+        map(
+            lambda v, i: s.iloc[builtins.max(0, i - v + 1): i + 1].min(skipna=False) if not pd.isnull(
+                v) and i - v + 1 >= 0 else np.nan,
+            n,
+            n.index
+        )
+    )
+
+
+def ago(s: Series[AllBaseTypes],
+        n: NonNegInt | Series[NonNegInt] = 1) -> Series[AllBaseTypes]:
+    """
+        negative integer not allowed, as you will never know the stock data in the future.
+
+        if n is positive integer: value of n periods ago
+        if n is positive integer series: value of n[i] periods ago of each period i
+    """
+    is_bool = s.dtype == bool
+    res = None
+    if isinstance(n, pd.Series):
+        res = pd.Series(
+            map(
+                lambda v, i: v if pd.isnull(v) else s.iloc[i - v] if not pd.isnull(v) and i - v >= 0 else np.nan,
+                n,
+                n.index
+            )
+        )
+    else:
+        res = s.shift(n)
+    if is_bool:
+        res.fillna(False, inplace=True)
+    return res
+
+
+def diff_over_periods(s: Series[Number],
+                      n: NonNegInt | Series[NonNegInt] = 1) -> Series[Number]:
+    """
+        negative integer not allowed, as you will never know the stock data in the future.
+
+        if n is positive integer: value of current period - value of n periods ago
+        if n is positive integer series: value of current period - value of n[i] periods ago for each period i
+    """
+    # return s.diff(n)
+    return s - ago(s, n)
+
+
+def std(s: Series[Number],
+        n: PosInt | Series[PosInt],
+        ddof: NonNegInt = 1) -> Series[Number]:
+    if not isinstance(n, pd.Series):
+        return s.rolling(n, min_periods=n).std(ddof=ddof)
+    return pd.Series(
+        map(
+            lambda v, i: s.iloc[builtins.max(0, i - v + 1): i + 1].std(ddof=ddof, skipna=False) if not pd.isnull(
+                v) and i - v + 1 >= 0 else np.nan,
+            n,
+            n.index
+        )
+    )
+    # return s.rolling(n).std(ddof=ddof)
+
+
+def if_else(s_bool: Series[Bool],
+            s_true: AllTypes,
+            s_false: AllTypes) -> AllTypes:
     return s_true.where(s_bool, s_false)
 
 
 def periods_since_nth_to_last_true(s_bool: Series[Bool], n: PosInt = 1) -> Series[NonNegInt]:
+    """
+    return the periods from current period to the period when the nth to last of s_bool is True(including the current period)
+    example:
+        params:
+            s_bool: [True, False, False, True, False, False, True, False, False, False]
+            n: 1
+        return:
+            res :    [0,    1,     2,     0,    1,     2,     0,    1,     2,     3]
+    """
     dq = collections.deque(maxlen=n)
 
-    def _lambda(i, b):
-        if b:
-            dq.append(i)
-        return i - dq[0] if len(dq) == n else np.nan
+    def helper(cur_index, cur_bool):
+        if cur_bool:
+            dq.append(cur_index)
+        return cur_index - dq[0] if len(dq) == n else np.nan
 
-    return pd.Series(map(_lambda, s_bool.index, s_bool))
-    # res = []
-    # for i, v in s_bool.iteritems():
-    #     if v:
-    #         dq.append(i)
-    #     if len(dq) == n:
-    #         res.append(i - dq[0])
-    # return res
+    return pd.Series(map(helper, s_bool.index, s_bool)).astype('Int64')
 
 
-def sum_over_periods(s: Series[Number], n: PosInt) -> Series[Number]:
-    return s.rolling(n).sum()
+def when_nth_to_last(s_bool: Series[Bool], s: Series[AllBaseTypes], n: PosInt = 1) -> Series[AllBaseTypes]:
+    """
+    return the value of s at the nth to last True of s_bool(including the current period)
+    example:
+        params:
+            s_bool: [True, False, False, True, False, False, True, False, False, False]
+            s:      [1,    2,     3,     4,    5,     6,     7,    8,     9,     10]
+            n: 1
+        return:
+            res:    [1,    1,     1,     4,    4,     4,     7,    7,     7,     7]
+    """
+    dq = collections.deque(maxlen=n)
 
+    def helper(cur_index, cur_bool):
+        if cur_bool:
+            dq.append(cur_index)
+        return s[dq[0]] if len(dq) == n else np.nan  # np.nan works the same as False for bool operation
 
-def max_over_periods(s: Series[Number], n: PosInt) -> Series[Number]:
-    return s.rolling(n).max()
-
-
-def min_over_periods(s: Series[Number], n: PosInt) -> Series[Number]:
-    return s.rolling(n).min()
+    return pd.Series(map(helper, s_bool.index, s_bool))
 
 
 def ma(s: Series[Number], n: PosInt) -> Series[Number]:
@@ -116,19 +280,3 @@ def linear_regression(s: Series[Number], n: PosInt) -> Series[Number]:
     poly = np.polyfit(m.index, m.values, deg=1)
     y = np.polyval(poly, m.index)
     return pd.Series(y[1] - y[0], index=m.index)
-
-
-def count_over_periods(s_bool: Series[Bool], n: PosInt) -> Series[NonNegInt]:
-    return s_bool.rolling(n).sum()
-
-
-def cross_above(s1: Series[Number], s2: Series[Number]) -> Series[Bool]:
-    cross_bool = s1 > s2
-    count_bool = count_over_periods(cross_bool, 2) == 1
-    return count_bool * cross_bool
-
-
-def cross_below(s1: Series[Number], s2: Series[Number]) -> Series[Bool]:
-    cross_bool = s1 <= s2
-    count_bool = count_over_periods(cross_bool, 2) == 1
-    return count_bool * cross_bool
