@@ -7,6 +7,11 @@ from utils.my_pd import *
 
 
 class MyTestCase(unittest.TestCase):
+    def test_divide(self):
+        s1 = pd.Series([np.nan, 7, 6, 5, 4, 3, np.nan, np.nan, 2, 1])
+        s2 = pd.Series([np.nan, 7, 6, 5, 4, 3, np.nan, np.nan, 2, 1]).shift(1)
+        print(divide(s1, 0))
+
     def test_round(self):
         s = pd.Series([1.1111, 2.2222, 3.3333, np.nan, None, 1]).shift(1)
         df = pd.DataFrame({

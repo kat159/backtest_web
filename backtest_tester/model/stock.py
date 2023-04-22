@@ -67,6 +67,16 @@ def get_all_stocks(path: str):
     return d
 
 
+_stocks = None
+
+
+def get_stocks():
+    global _stocks
+    if _stocks is None:
+        _stocks = get_all_stocks('C:\\Users\\insect\\Desktop\\stock_data_test')
+    return _stocks
+
+
 if __name__ == '__main__':
     stock = Stock(r'C:\Users\insect\Desktop\股票数据\SH#600000.txt')
     stocks = get_all_stocks(r'C:\Users\insect\Desktop\stock_data_test')

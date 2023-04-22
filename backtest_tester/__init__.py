@@ -9,8 +9,10 @@ import json
 from utils import my_pd, indicator
 from utils.my_inspect import get_file_functions_map, FunctionInfo, get_file_functions_list
 from types import MappingProxyType
+from utils.tester import tester
 
 from utils.my_typing import get_type_name
+from model import criterion as criterion_service
 
 app = Flask(__name__)
 
@@ -33,6 +35,7 @@ _stocks_info = [{
 functions: MappingProxyType[str, FunctionInfo] = MappingProxyType(get_file_functions_map(my_pd))
 indicators: MappingProxyType[str, FunctionInfo] = MappingProxyType(get_file_functions_map(indicator))
 
+
 def get_stocks() -> dict[str, Stock]:
     return _stocks.copy()
 
@@ -40,12 +43,53 @@ def get_stocks() -> dict[str, Stock]:
 @app.route('/api/backtest/run-test', methods=['POST'])
 def run_test():
     # Return a JSON response
-    return {'message': 'Person object received'}
+    return {'message': 'run-test received'}
+
+
+@app.route('/api/backtest/user/<string:username>/criterion', methods=['POST'])
+def save_criterion(username: str):
+    # Return a JSON response
+    data = request.get_json()
+    criterion = data['criterion']
+
+    id = criterion['id'] if 'id' in criterion else None
+    name = criterion['name']
+    description = criterion['description']
+    params = criterion['params']
+    variables = criterion['variables']
+    final_criterion = criterion['return']
+
+    # print('name:', name)
+    # print('description:', description)
+    # print('params:', params)
+    # print('variables:', variables)
+    # print('final_criterion:', final_criterion)
+
+    variable_map = {}
+    for variable in variables:
+        variable_map[variable['name']] = variable
+    criterion_service.save_criterion(final_criterion, _stocks['600000'], indicators, functions, variable_map, username,
+                                     id, name, description)
+
+    return {'message': 'save_criterion received'}
+
+
+@app.route('/api/backtest/user/<string:username>/criterion', methods=['GET'])
+def page_criterion(username: str):
+    page = int(request.args.get('page'))
+    size = int(request.args.get('size'))
+    return jsonify(criterion_service.page_criterion(username, page, size))
+
+
+@app.route('/api/backtest/criterion/<string:id>', methods=['GET'])
+def get_criterion(id: str):
+    return criterion_service.get_criterion(id)
 
 
 @app.route('/api/backtest/stock', methods=['GET'])
 def get_stocks_info():
     return jsonify(_stocks_info)
+
 
 @app.route('/api/backtest/indicator', methods=['GET'])
 def get_indicators():

@@ -42,7 +42,18 @@ class TestToBoolFunc(unittest.TestCase):
         self.assertRaises(Exception, to_bool, pd.Series([True, False, 1.0]))
 
 
-class TestToIntFunc(unittest.TestCase):
+class TestCases(unittest.TestCase):
+    def test_is_non_neg_int(self):
+        s1 = pd.Series([1, np.nan, 3, 4, 5])
+        s2 = s1.shift(1)
+        x = s1
+        # (isinstance(x, int) and x >= 0) or pd.isnull(x) or (isinstance(x, str) and is_int_str(x) and int(x) >= 0)
+        # res = (isinstance(x, int) and x >= 0)
+        # res = pd.isnull(x)
+        # res = (isinstance(x, str) and is_int_str(x) and int(x) >= 0)
+        b1 = pd.Series([True, True, True, True, True])
+        b2 = pd.Series([False, False, False, False, False])
+        print(b1 or b2)
     def test_created(self):
         s1 = to_int(pd.Series([1, 2, 3, 4]))
         s2 = s1 + 1

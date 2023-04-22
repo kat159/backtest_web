@@ -4,7 +4,7 @@ import types
 import decimal
 import typing
 from decimal import Decimal
-
+import re
 import numpy as np
 import pandas as pd
 
@@ -29,7 +29,9 @@ def test(name, age):
 
 
 if __name__ == '__main__':
-    pass
+    s1 = pd.Series([1, 2, 3])
+    s2 = s1.shift(1).astype('Int64')
+    print(isinstance(s2[1], int), s2[1], isinstance(s2[1], np.int64), isinstance(s2[1], np.int32))
 
 
 

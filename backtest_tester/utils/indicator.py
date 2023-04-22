@@ -4,13 +4,15 @@ from .my_typing import *
 
 def macd(close: Series[Number], short: PosInt = 12, long: PosInt = 26, m: PosInt = 9) -> Series[Number]:
     dif = ema(close, short) - ema(close, long)
-    return round(dif)
+    return dif
+    # return round(dif)
 
 
 def macd_signal(close: Series[Number], short: PosInt = 12, long: PosInt = 26, m: PosInt = 9) -> Series[Number]:
     dif = ema(close, short) - ema(close, long)
     dea = ema(dif, m)
-    return round(dea)
+    return dea
+    # return round(dea)
 
 
 def kdj_k(close: Series[Number], high: Series[Number], low: Series[Number], n: PosInt = 9, m1: PosInt = 3,

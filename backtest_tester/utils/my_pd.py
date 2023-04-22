@@ -4,6 +4,8 @@ import inspect
 import types
 import numpy as np
 import pandas as pd
+
+from utils.my_exception import NonSenseTypeError
 from utils.my_typing import *
 from typing import *
 
@@ -18,12 +20,15 @@ from typing import *
             s2 = [2,      5,  3, np.nan]
             if_else(s1 > s2, s1, s2) -> [np.nan, 5, 10, 2]  # last nan of s2 might not be expected
             if_else(s1 > s2, s1, if_else(s1 <= s2, s2, np.nan)) -> [np.nan, 5, 10, np.nan]
-            
+        3. single value only comes from user input, so functions like add(1, 2), abs(1) not allowed, user should do it by itself
 """
 
 
 def add(s1: Number | Series[Number],
         s2: Number | Series[Number]) -> Number | Series[Number]:
+    # if isinstance(s1, pd.Series) and isinstance(s2, pd.Series):
+    #     if s1.dtype == 'Int64' and s2.dtype == 'Int64':
+    #         return (s1 + s2).astype('Int64')
     return s1 + s2
 
 
@@ -51,7 +56,7 @@ def round(s: Number | Series[Number],
     return builtins.round(s, n)
 
 
-def abs(s: Series[Number]) -> Number | Series[Number]:
+def abs(s: Number | Series[Number]) -> Number | Series[Number]:
     if isinstance(s, pd.Series):
         return s.abs()
     return builtins.abs(s)
@@ -80,11 +85,12 @@ def or_(s1: Series[Bool], s2: Series[Bool]) -> Series[Bool]:
 
 
 def higher(s1: Series[Number] | Number, s2: Series[Number] | Number) -> Series[Bool] | Bool:
-    return s1 > s2
+    return s1.combine(s2, np.greater)
 
 
 def lower(s1: Series[Number] | Number, s2: Series[Number] | Number) -> Series[Bool] | Bool:
-    return s1 < s2
+    return s1.combine(s2, np.less)
+    # return s1 < s2
 
 
 def cross_above(s1: Series[Number], s2: Series[Number]) -> Series[Bool]:
@@ -102,8 +108,8 @@ def cross_below(s1: Series[Number], s2: Series[Number]) -> Series[Bool]:
 def sum_over_periods(s: Series[Number],
                      n: Series[PosInt] | PosInt) -> Series[Number]:
     """
-        if n is positive integer: sum of last n periods(include current period)
-        if n is positive integer series: sum of last n[i] periods(include current period) of each period i
+        if n is positive integer: return sum of last n periods(include current period)
+        if n is positive integer series: return sum of last n[i] periods(include current period) for each period i
     """
     if not isinstance(n, pd.Series):
         # return s.rolling(n).sum(skipna=True)  # skipna not work in rolling().sum()
@@ -126,8 +132,8 @@ def count_over_periods(s_bool: Series[Bool], n: PosInt | Series[PosInt]) -> Seri
 def max_over_periods(s: Series[Number],
                      n: PosInt | Series[PosInt]) -> Series[Number]:
     """
-        if n is positive integer: max of last n periods(include current period)
-        if n is positive integer series: max of last n[i] periods(include current period) of each period i
+        if n is positive integer: return max of last n periods(include current period)
+        if n is positive integer series: return max of last n[i] periods(include current period) of each period i
     """
     if not isinstance(n, pd.Series):
         return s.rolling(n, min_periods=n).max()
@@ -220,27 +226,34 @@ def if_else(s_bool: Series[Bool],
 
 def periods_since_nth_to_last_true(s_bool: Series[Bool], n: PosInt = 1) -> Series[NonNegInt]:
     """
-    return the periods from current period to the period when the nth to last of s_bool is True(including the current period)
+    return the periods from current period to the period when the nth to last of s_bool is True(excluding the current period)
     example:
         params:
             s_bool: [True, False, False, True, False, False, True, False, False, False]
             n: 1
         return:
-            res :    [0,    1,     2,     0,    1,     2,     0,    1,     2,     3]
+            res :    [0,    1,     2,     3,    1,     2,     3,    1,     2,     3]
     """
     dq = collections.deque(maxlen=n)
 
     def helper(cur_index, cur_bool):
+        # today's True should not be counted into the calculation of today's result
+        # if cur_bool:
+        #     dq.append(cur_index)
+        # return cur_index - dq[0] if len(dq) == n else np.nan
+
+        res = cur_index - dq[0] if len(dq) == n else np.nan
         if cur_bool:
             dq.append(cur_index)
-        return cur_index - dq[0] if len(dq) == n else np.nan
+        return res
 
     return pd.Series(map(helper, s_bool.index, s_bool)).astype('Int64')
+    # return pd.Series(map(helper, s_bool.index, s_bool))
 
 
 def when_nth_to_last(s_bool: Series[Bool], s: Series[AllBaseTypes], n: PosInt = 1) -> Series[AllBaseTypes]:
     """
-    return the value of s at the nth to last True of s_bool(including the current period)
+    return the value of s at the nth to last True of s_bool(excluding the current period)
     example:
         params:
             s_bool: [True, False, False, True, False, False, True, False, False, False]
@@ -252,9 +265,11 @@ def when_nth_to_last(s_bool: Series[Bool], s: Series[AllBaseTypes], n: PosInt = 
     dq = collections.deque(maxlen=n)
 
     def helper(cur_index, cur_bool):
+
+        res = s[dq[0]] if len(dq) == n else np.nan  # np.nan works the same as False for bool operation
         if cur_bool:
             dq.append(cur_index)
-        return s[dq[0]] if len(dq) == n else np.nan  # np.nan works the same as False for bool operation
+        return res
 
     return pd.Series(map(helper, s_bool.index, s_bool))
 
