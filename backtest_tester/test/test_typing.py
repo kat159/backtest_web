@@ -53,7 +53,7 @@ class TestCases(unittest.TestCase):
         # res = (isinstance(x, str) and is_int_str(x) and int(x) >= 0)
         b1 = pd.Series([True, True, True, True, True])
         b2 = pd.Series([False, False, False, False, False])
-        print(b1 or b2)
+
     def test_created(self):
         s1 = to_int(pd.Series([1, 2, 3, 4]))
         s2 = s1 + 1

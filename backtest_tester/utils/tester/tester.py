@@ -63,8 +63,8 @@ def save_criterion(
             }
 
     res = helper(final_criterion)
-    # print('res:', list(res))
-    # print('res:', res)
+    #
+    #
     decode_final_criterion(final_criterion, stock, indicators, functions, variables)
 
 
@@ -96,7 +96,7 @@ def decode_final_criterion(
             }
 
     res = helper(final_criterion)
-    # print('decoded final criterion:', res)
-    # print('res:', res)
+    #
+    #
 
 

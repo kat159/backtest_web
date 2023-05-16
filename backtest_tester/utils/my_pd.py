@@ -85,12 +85,15 @@ def or_(s1: Series[Bool], s2: Series[Bool]) -> Series[Bool]:
 
 
 def higher(s1: Series[Number] | Number, s2: Series[Number] | Number) -> Series[Bool] | Bool:
-    return s1.combine(s2, np.greater)
+    if isinstance(s1, pd.Series) or isinstance(s2, pd.Series):
+        return s1.combine(s2, np.greater)
+    return s1 > s2
 
 
 def lower(s1: Series[Number] | Number, s2: Series[Number] | Number) -> Series[Bool] | Bool:
-    return s1.combine(s2, np.less)
-    # return s1 < s2
+    if isinstance(s1, pd.Series) or isinstance(s2, pd.Series):
+        return s1.combine(s2, np.less)
+    return s1 < s2
 
 
 def cross_above(s1: Series[Number], s2: Series[Number]) -> Series[Bool]:

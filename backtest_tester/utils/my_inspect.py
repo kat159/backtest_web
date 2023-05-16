@@ -37,13 +37,13 @@ def get_file_functions_list(module: types.ModuleType) -> list[dict]:
     functions = get_file_functions_map(module)
     res = []
     for name, func_info in functions.items():
-        for param in func_info.params:
-            print('-------------------------')
-            print('name:', param.name)
-            print('type:', param.type)
-            print('type name:', get_type_name(param.type))
-            print('base types:', get_base_types(param.type))
-            print('generic types:', get_series_generic_types(param.type))
+        # for param in func_info.params:
+        #
+
+
+
+
+
 
         res.append({
             'name': name,
@@ -78,7 +78,7 @@ def get_file_functions_map(module: types.ModuleType) -> MappingProxyType[str, Fu
     # # param_types = []
     # # param_defaults = []
     # for param in sig.parameters.values():
-    #     print(type(param))
+    #
     #     param_names.append(param.name)
     #     if param.annotation != inspect.Parameter.empty:
     #         param_types.append(param.annotation)
@@ -92,12 +92,12 @@ def get_file_functions_map(module: types.ModuleType) -> MappingProxyType[str, Fu
     #
     #
     # # Print the function information
-    # print(f'Function name: {name}')
-    # print(f'Parameters: {", ".join(param_names)}')
-    # print(f'Parameter types: {", ".join(str(t) for t in param_types)}')
-    # print(f'Parameter defaults: {", ".join(str(d) for d in param_defaults)}')
-    # print(f'Return type: {return_type}')
-    # print(f'Comments: {comments}')
-    # print()
+    #
+    #
+    #
+    #
+    #
+    #
+    #
 
 # get_file_functions_map(filename)

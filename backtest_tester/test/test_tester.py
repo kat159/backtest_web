@@ -1,13 +1,15 @@
 import unittest
+from types import MappingProxyType
 
+from model.stock.stock import Stock
+from model.stock.stock_service import get_all_stocks
 from utils.my_pd import *
 from utils.indicator import *
-from model.stock import Stock, get_all_stocks
 
 
 class MyTestCase(unittest.TestCase):
     def test_macd_divergence(self):
-        _stocks: dict[str, Stock] = get_all_stocks(r'C:\Users\insect\Desktop\stock_data_test')
+        _stocks: dict[str, Stock] = dict(get_all_stocks())
         stock = _stocks['600000']
         open = pd.Series(stock.open)
         high = pd.Series(stock.high)
@@ -21,10 +23,10 @@ class MyTestCase(unittest.TestCase):
         for i in range(2, 1000):
             if macd[i - 2] > macd[i - 1] and macd[i - 1] < macd[i]:
                 if not is_macd_rebound[i]:
-                    print('is_macd_rebound error:', macd[i - 2], macd[i - 1], macd[i])
+
 
         periods_to_last_time_macd_rebound = periods_since_nth_to_last_true(is_macd_rebound, 1)
-        # print(pd.concat([macd, is_macd_rebound, periods_to_last_time_macd_rebound], axis=1).head(1000))
+        #
 
         cur_macd_trough = ago(macd, 1)
 
@@ -37,7 +39,7 @@ class MyTestCase(unittest.TestCase):
         is_macd_divergence = and_(higher(cur_macd_trough, last_macd_trough),
                                   lower(closing_price_when_cur_macd_trough, closing_price_when_last_macd_trough))
         res = and_(is_macd_rebound, higher(cur_macd_trough, last_macd_trough))
-        print(count_over_periods(res, 5000))
+
 
 
 if __name__ == '__main__':

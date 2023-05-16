@@ -16,18 +16,6 @@ class MyTestCase(unittest.TestCase):
         # filename = 'utils.my_pd'
         # my_inspect.get_file_functions_map(filename)
         func_info_map = get_file_functions_map(my_pd)
-        for name, func_info in func_info_map.items():
-            print('-------------------------')
-            print('name: ', name)
-            print('func: ', func_info.func)
-            print('params: ', [{
-                'name': param.name,
-                'types': get_type_name(param.type),
-            } for param in func_info.params])
-            print('return_type: ', get_type_name(func_info.return_type))
-            print('comments: ', func_info.comments)
-
-
 
 
 if __name__ == '__main__':

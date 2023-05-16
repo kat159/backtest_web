@@ -15,7 +15,7 @@ def execute_decoded_final_criterion(stock: Stock, decoded_final_criterion: str):
     volume = pd.Series(stock.volume)
 
     res = eval(decoded_final_criterion)
-    print(res)
+    ['value']
 
 
 if __name__ == '__main__':
